@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import corridor from '@/assets/scoobert-corridor.jpg';
+import music from '@/assets/still-life.mp3.asset.json';
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -15,5 +17,6 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  return <iframe src="/razy.html" title="Razy Tokens" className="fixed inset-0 h-screen w-screen border-0" />;
+  const params = new URLSearchParams({ corridor, music: music.url });
+  return <iframe src={`/razy.html?${params}`} allow="autoplay" title="Razy Tokens" className="fixed inset-0 h-screen w-screen border-0" />;
 }

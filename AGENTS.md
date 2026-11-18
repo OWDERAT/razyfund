@@ -28,3 +28,6 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+- Keep the supplied standalone page inside the index iframe; pass bundled image and CDN audio URLs through its query parameters so assets resolve after publishing.
+- Keep the hidden descent's depth/volume calculations in a browser-safe standalone module with regression tests; scroll position is the sole reversible source of visual and audio intensity.
