@@ -1,0 +1,638 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Razy Tokens™ — Unlock Razy's Voice</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+    --bg:#08090d;
+    --card:#11131b;
+    --border:#262838;
+    --muted:#85899b;
+    --purple:#9270ff;
+    --pink:#d16bff;
+    --white:#f7f7ff;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+    font-family:Inter,sans-serif;
+    background:var(--bg);
+    color:var(--white);
+    min-height:100vh;
+    overflow-x:hidden;
+}
+body::before{
+    content:"";
+    position:fixed;
+    width:600px;height:600px;
+    background:#7744ff;
+    filter:blur(180px);
+    opacity:.12;
+    top:-300px;left:30%;
+    pointer-events:none;
+}
+button,input{font-family:inherit}
+nav{
+    max-width:1200px;
+    margin:auto;
+    padding:26px 30px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+.logo{font-size:21px;font-weight:900;letter-spacing:-1px}
+.logo span{color:var(--purple)}
+.status{
+    border:1px solid #28543e;
+    color:#6de6a2;background:#10291d;
+    padding:8px 13px;border-radius:20px;
+    font-size:11px;font-weight:700;
+}
+.container{max-width:1100px;margin:auto;padding:65px 25px 100px}
+.hero{text-align:center;margin-bottom:55px}
+.announcement{
+    display:inline-block;
+    border:1px solid #39304e;
+    background:#1b1629;color:#c1aaff;
+    padding:9px 15px;border-radius:30px;
+    font-size:11px;font-weight:700;margin-bottom:27px;
+}
+h1{font-size:clamp(42px,7vw,72px);font-weight:900;letter-spacing:-4px;line-height:1.05}
+.gradient{
+    background:linear-gradient(90deg,#9877ff,#d77bff);
+    -webkit-background-clip:text;color:transparent;
+}
+.hero p{color:var(--muted);max-width:520px;margin:22px auto 0;font-size:15px;line-height:1.8}
+.balance{
+    max-width:750px;margin:0 auto 55px;padding:25px 30px;
+    background:linear-gradient(120deg,#171426,#11131b);
+    border:1px solid #39304e;border-radius:18px;
+    display:flex;align-items:center;justify-content:space-between;gap:20px;
+}
+.balance-label{font-size:12px;color:var(--muted);margin-bottom:8px}
+.balance-number{font-size:30px;font-weight:900}
+.balance-number span{color:var(--purple)}
+.balance-info{color:#a9a0c9;font-size:12px;margin-top:6px}
+.balance-icon{font-size:38px;background:#29203e;padding:15px;border-radius:15px}
+.section-heading{text-align:center;margin-bottom:30px}
+.section-heading h2{font-size:27px;letter-spacing:-1px}
+.section-heading p{color:var(--muted);margin-top:9px;font-size:13px}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.plan{
+    background:var(--card);border:1px solid var(--border);
+    border-radius:18px;padding:27px;position:relative;transition:.25s;
+}
+.plan:hover{transform:translateY(-6px);border-color:#7554cf}
+.plan.featured{border-color:var(--purple);background:linear-gradient(160deg,#201a35,#11131b 60%)}
+.popular{
+    position:absolute;top:-13px;right:20px;
+    background:linear-gradient(90deg,#916cff,#c56aff);
+    color:white;font-size:10px;font-weight:800;
+    padding:7px 12px;border-radius:20px;
+}
+.plan-name{color:#b7a1ff;font-size:13px;font-weight:800;letter-spacing:1px}
+.price{font-size:37px;font-weight:900;margin-top:17px;letter-spacing:-2px}
+.price small{font-size:12px;color:var(--muted);letter-spacing:0;font-weight:500}
+.tokens{margin-top:10px;font-size:13px;color:#bca9ff;font-weight:700}
+.description{font-size:12px;color:var(--muted);margin-top:13px;line-height:1.6;min-height:40px}
+.features{margin:25px 0;list-style:none}
+.features li{font-size:12px;color:#c3c4d0;margin:15px 0;display:flex;gap:10px}
+.features li::before{content:"✓";color:#a98aff;font-weight:900}
+.buy{
+    width:100%;padding:14px;border:1px solid #383344;
+    border-radius:10px;background:#1d1a29;color:white;
+    font-weight:800;cursor:pointer;transition:.2s;
+}
+.buy:hover{background:#302448;border-color:var(--purple)}
+.featured .buy{background:linear-gradient(90deg,#805dff,#b05cff);border:none}
+.warning{text-align:center;margin-top:35px;color:#77798a;font-size:11px;line-height:1.7}
+footer{border-top:1px solid #1e202b;padding:25px;text-align:center;color:#66697b;font-size:11px}
+footer strong{color:#a48aff}
+
+/* CHECKOUT */
+.checkout-overlay{
+    display:none;position:fixed;inset:0;
+    background:rgba(0,0,0,.82);backdrop-filter:blur(12px);
+    z-index:20;overflow-y:auto;padding:25px;
+    align-items:center;justify-content:center;
+}
+.checkout-overlay.show{display:flex}
+.checkout{
+    width:100%;max-width:520px;
+    background:#11131b;border:1px solid #343044;
+    border-radius:22px;padding:30px;
+    position:relative;animation:appear .25s ease;
+}
+@keyframes appear{
+    from{opacity:0;transform:translateY(15px) scale(.97)}
+    to{opacity:1;transform:translateY(0) scale(1)}
+}
+.close{
+    position:absolute;right:20px;top:18px;
+    background:#222431;color:white;border:0;
+    width:34px;height:34px;border-radius:9px;
+    cursor:pointer;font-size:18px;
+}
+.checkout-logo{font-weight:900;font-size:14px;color:#a78aff;margin-bottom:25px}
+.checkout h2{font-size:25px;letter-spacing:-1px}
+.checkout-sub{font-size:12px;color:var(--muted);margin-top:7px}
+.order-box{
+    margin:23px 0;background:#1b1929;
+    border:1px solid #39304e;border-radius:13px;padding:17px;
+}
+.order-row{display:flex;justify-content:space-between;align-items:center;font-size:13px}
+.order-row small{color:var(--muted)}
+.order-row.total{margin-top:15px;padding-top:15px;border-top:1px solid #39304e;font-weight:800}
+.order-row.total span:last-child{color:#c1aaff;font-size:19px}
+.field-label{font-size:11px;color:#a5a5b5;font-weight:700;margin:17px 0 8px;display:block}
+.field{
+    width:100%;padding:13px 14px;
+    background:#1b1d29;border:1px solid #303345;
+    border-radius:9px;color:white;outline:none;font-size:13px;
+    transition:.2s;
+}
+.field:focus{border-color:var(--purple)}
+.field::placeholder{color:#626578}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.demo-card{
+    height:170px;border-radius:15px;
+    padding:22px;margin:23px 0;
+    background:linear-gradient(125deg,#39266b,#7251b5 60%,#bd6bd4);
+    position:relative;overflow:hidden;
+    box-shadow:0 12px 30px #0005;
+}
+.demo-card::before{
+    content:"";position:absolute;width:220px;height:220px;
+    border:1px solid #ffffff24;border-radius:50%;
+    right:-55px;top:-110px;
+}
+.demo-card::after{
+    content:"";position:absolute;width:180px;height:180px;
+    border:1px solid #ffffff20;border-radius:50%;
+    right:0;top:-90px;
+}
+.card-top{display:flex;justify-content:space-between;position:relative;z-index:1}
+.card-chip{width:33px;height:24px;border-radius:5px;background:linear-gradient(135deg,#f7d98a,#bd9d51);margin-top:18px}
+.card-number{font-size:17px;letter-spacing:2px;margin-top:18px;position:relative;z-index:1;font-weight:600}
+.card-bottom{display:flex;justify-content:space-between;margin-top:13px;position:relative;z-index:1}
+.card-bottom small{font-size:8px;color:#ffffffa0;display:block;margin-bottom:5px}
+.card-bottom span{font-size:10px;font-weight:700;text-transform:uppercase}
+.pay-button{
+    width:100%;padding:15px;border:0;border-radius:10px;
+    background:linear-gradient(90deg,#805dff,#b05cff);
+    color:white;font-size:14px;font-weight:800;
+    cursor:pointer;margin-top:22px;transition:.2s;
+}
+.pay-button:hover{filter:brightness(1.15)}
+.pay-button:disabled{opacity:.5;cursor:not-allowed}
+.demo-notice{
+    text-align:center;color:#88899a;font-size:10px;
+    line-height:1.6;margin-top:14px;
+}
+.secure{display:flex;justify-content:center;gap:6px;color:#70dca1;font-size:10px;margin-top:13px}
+
+/* PROCESSING AND SUCCESS */
+.processing,.success{display:none;text-align:center;padding:35px 5px}
+.processing.active,.success.active{display:block}
+.spinner{
+    width:58px;height:58px;border:4px solid #353044;
+    border-top-color:#a58aff;border-radius:50%;
+    animation:spin .8s linear infinite;margin:0 auto 25px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.processing h2,.success h2{font-size:26px;margin-bottom:10px}
+.processing p,.success p{font-size:13px;color:var(--muted);line-height:1.8}
+.checkmark{
+    width:76px;height:76px;border-radius:50%;
+    background:#173b2a;border:1px solid #39865a;
+    display:flex;align-items:center;justify-content:center;
+    color:#72e7a1;font-size:38px;margin:0 auto 24px;
+    animation:pop .4s ease;
+}
+@keyframes pop{from{transform:scale(.5)}to{transform:scale(1)}}
+.receipt{
+    margin:25px 0;background:#1b1d29;
+    border:1px solid #303345;border-radius:12px;
+    padding:17px;text-align:left;
+}
+.receipt div{display:flex;justify-content:space-between;padding:8px 0;font-size:12px}
+.receipt span:first-child{color:var(--muted)}
+.success .pay-button{margin-top:5px}
+.order-id{font-family:monospace;color:#b9a4ff;font-size:12px;margin-top:17px}
+
+@media(max-width:800px){
+    .plans{grid-template-columns:1fr;max-width:420px;margin:auto;gap:25px}
+    .balance{max-width:420px}
+    h1{letter-spacing:-2px}
+}
+@media(max-width:480px){
+    .checkout{padding:23px 18px}
+    .checkout-overlay{padding:12px}
+}
+
+/* ===== MODERN MOTION LAYER ===== */
+html{scroll-behavior:smooth}
+body::after{content:"";position:fixed;width:520px;height:520px;background:#d16bff;filter:blur(200px);opacity:.08;bottom:-260px;right:-120px;pointer-events:none;animation:drift 18s ease-in-out infinite alternate}
+body::before{animation:drift 22s ease-in-out infinite alternate-reverse}
+@keyframes drift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-120px,80px) scale(1.2)}100%{transform:translate(90px,-40px) scale(.9)}}
+#grid-bg{position:fixed;inset:0;pointer-events:none;z-index:-1;background-image:linear-gradient(#ffffff06 1px,transparent 1px),linear-gradient(90deg,#ffffff06 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at 50% 0%,#000 20%,transparent 70%);animation:gridmove 20s linear infinite}
+@keyframes gridmove{to{background-position:60px 60px}}
+#cursor-glow{position:fixed;width:420px;height:420px;border-radius:50%;pointer-events:none;z-index:0;background:radial-gradient(circle,#9270ff22,transparent 65%);transform:translate(-50%,-50%);transition:opacity .3s;left:-500px;top:-500px}
+nav{animation:navIn .9s cubic-bezier(.2,.8,.2,1) both}
+@keyframes navIn{from{opacity:0;transform:translateY(-20px);filter:blur(8px)}}
+.status{position:relative}
+.status::first-letter{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+.announcement{position:relative;overflow:hidden;animation:rise 1s .1s cubic-bezier(.2,.8,.2,1) both}
+.announcement::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,#ffffff30 50%,transparent 70%);transform:translateX(-100%);animation:shine 3.5s 1.2s ease-in-out infinite}
+@keyframes shine{60%,100%{transform:translateX(100%)}}
+h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg);filter:blur(12px);animation:wordIn 1s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes wordIn{to{opacity:1;transform:none;filter:blur(0)}}
+.gradient{background:linear-gradient(90deg,#9877ff,#d77bff,#7fd4ff,#9877ff);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;animation:wordIn 1s .55s cubic-bezier(.2,.8,.2,1) forwards,hue 6s linear infinite;display:inline-block;opacity:0;transform:translateY(40%);filter:blur(12px)}
+@keyframes hue{to{background-position:300% 0}}
+.hero p{animation:rise 1s .8s cubic-bezier(.2,.8,.2,1) both}
+@keyframes rise{from{opacity:0;transform:translateY(24px);filter:blur(6px)}}
+.reveal{opacity:0;transform:translateY(40px) scale(.98);filter:blur(8px);transition:opacity .9s cubic-bezier(.2,.8,.2,1),transform .9s cubic-bezier(.2,.8,.2,1),filter .9s}
+.reveal.in{opacity:1;transform:none;filter:blur(0)}
+.balance{position:relative;overflow:hidden}
+.balance::before{content:"";position:absolute;inset:-1px;border-radius:18px;padding:1px;background:conic-gradient(from var(--a),transparent 70%,#9270ff,#d16bff,transparent);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spinA 4s linear infinite;pointer-events:none}
+@property --a{syntax:'<angle>';initial-value:0deg;inherits:false}
+@keyframes spinA{to{--a:360deg}}
+.balance-icon{animation:float 3s ease-in-out infinite;box-shadow:0 0 30px #9270ff40}
+@keyframes float{50%{transform:translateY(-8px) rotate(-6deg)}}
+.balance-number.bump{animation:bump .6s cubic-bezier(.3,1.6,.5,1)}
+@keyframes bump{40%{transform:scale(1.15);text-shadow:0 0 30px #9270ff}}
+.plans{perspective:1200px}
+.plan{transform-style:preserve-3d;transition:transform .25s ease-out,border-color .3s,box-shadow .3s;overflow:hidden;--mx:50%;--my:50%}
+.plan:hover{transform:none;box-shadow:0 30px 60px -20px #7554cf55}
+.plan::after{content:"";position:absolute;inset:0;border-radius:18px;background:radial-gradient(400px circle at var(--mx) var(--my),#9270ff22,transparent 45%);opacity:0;transition:opacity .3s;pointer-events:none}
+.plan:hover::after{opacity:1}
+.plan.featured{overflow:visible;animation:glow 3s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 50px -10px #9270ff70}}
+.popular{animation:float 2.5s ease-in-out infinite}
+.features li{opacity:0;transform:translateX(-10px);transition:.5s cubic-bezier(.2,.8,.2,1)}
+.plan.in .features li{opacity:1;transform:none}
+.buy,.pay-button{position:relative;overflow:hidden;transition:transform .2s,background .2s,border-color .2s,filter .2s}
+.buy:active,.pay-button:active{transform:scale(.97)}
+.featured .buy{background:linear-gradient(90deg,#805dff,#b05cff,#805dff);background-size:200% 100%;animation:hue 3s linear infinite}
+.ripple{position:absolute;border-radius:50%;background:#ffffff55;transform:scale(0);animation:ripple .7s ease-out forwards;pointer-events:none}
+@keyframes ripple{to{transform:scale(4);opacity:0}}
+.checkout-overlay.show{animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;backdrop-filter:blur(0)}}
+.checkout{animation:modalIn .6s cubic-bezier(.2,1.2,.3,1)}
+@keyframes modalIn{from{opacity:0;transform:translateY(40px) scale(.92) rotateX(12deg);filter:blur(10px)}}
+.demo-card{transition:transform .2s ease-out}
+.demo-card .sheen{position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,#ffffff35 50%,transparent 70%);background-size:250% 100%;animation:cardSheen 4s ease-in-out infinite;pointer-events:none}
+@keyframes cardSheen{0%{background-position:150% 0}60%,100%{background-position:-100% 0}}
+.field:focus{box-shadow:0 0 0 4px #9270ff25;transform:translateY(-1px)}
+.checkmark{animation:pop .6s cubic-bezier(.3,1.8,.5,1)}
+.confetti{position:fixed;width:8px;height:14px;top:-20px;z-index:50;pointer-events:none;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.reveal,h1 .word,.gradient,.features li{opacity:1!important;transform:none!important;filter:none!important}}
+</style>
+</head>
+<body>
+
+<nav>
+    <div class="logo">RAZY<span>TOKENS™</span></div>
+    <div class="status">● SYSTEM ONLINE</div>
+</nav>
+
+<main class="container">
+    <section class="hero">
+        <div class="announcement">✦ THE FUTURE OF RAZY COMMUNICATION</div>
+        <h1>Give Razy a<br><span class="gradient">voice.</span></h1>
+        <p>Razy needs tokens to communicate with the world. Subscribe to a plan and make sure Razy never runs out of things to say.</p>
+    </section>
+
+    <section class="balance">
+        <div>
+            <div class="balance-label">YOUR CURRENT TOKEN BALANCE</div>
+            <div class="balance-number"><span id="balance">0</span> <span>RT</span></div>
+            <div class="balance-info" id="balance-info">Razy is currently waiting for funding.</div>
+        </div>
+        <div class="balance-icon">⚡</div>
+    </section>
+
+    <div class="section-heading">
+        <h2>Choose your subscription</h2>
+        <p>Every token brings Razy one step closer to speaking.</p>
+    </div>
+
+    <section class="plans">
+        <div class="plan">
+            <div class="plan-name">Starter</div>
+            <div class="price">€2.99 <small>/ month</small></div>
+            <div class="tokens">500 RT / month</div>
+            <p class="description">For occasional Razy communication.</p>
+            <ul class="features">
+                <li>500 Razy Tokens</li>
+                <li>Basic AI communication</li>
+                <li>Limited daily messages</li>
+                <li>Standard response priority</li>
+            </ul>
+            <button class="buy" onclick="openCheckout('Starter',500,'2.99')">Subscribe now</button>
+        </div>
+
+        <div class="plan featured">
+            <div class="popular">MOST POPULAR</div>
+            <div class="plan-name">Professional</div>
+            <div class="price">€7.99 <small>/ month</small></div>
+            <div class="tokens">2,500 RT / month</div>
+            <p class="description">For Razy who has a LOT to say.</p>
+            <ul class="features">
+                <li>2,500 Razy Tokens</li>
+                <li>Extended AI communication</li>
+                <li>Priority message processing</li>
+                <li>Premium Razy access</li>
+                <li>Reduced chance of silence</li>
+            </ul>
+            <button class="buy" onclick="openCheckout('Professional',2500,'7.99')">Get Professional</button>
+        </div>
+
+        <div class="plan">
+            <div class="plan-name">Enterprise</div>
+            <div class="price">€19.99 <small>/ month</small></div>
+            <div class="tokens">10,000 RT / month</div>
+            <p class="description">Unlimited ambitions. Almost unlimited talking.</p>
+            <ul class="features">
+                <li>10,000 Razy Tokens</li>
+                <li>Maximum communication capacity</li>
+                <li>VIP Razy access</li>
+                <li>Highest processing priority</li>
+                <li>Dedicated Razy support</li>
+            </ul>
+            <button class="buy" onclick="openCheckout('Enterprise',10000,'19.99')">Go Enterprise</button>
+        </div>
+    </section>
+
+    <p class="warning">* This is a fictional subscription service. No real payments are processed.</p>
+</main>
+
+<footer>© 2026 <strong>Razy Tokens™</strong> — Making Razy Speak Since 2026.<br><br>Powered by questionable financial decisions.</footer>
+
+<!-- CHECKOUT -->
+<div class="checkout-overlay" id="overlay">
+    <div class="checkout">
+        <button class="close" onclick="closeCheckout()">×</button>
+
+        <div class="checkout-logo">RAZY TOKENS™ / CHECKOUT</div>
+
+        <!-- FORM -->
+        <div id="checkout-form">
+            <h2>Complete your order</h2>
+            <p class="checkout-sub">You're one step away from funding Razy.</p>
+
+            <div class="order-box">
+                <div class="order-row">
+                    <span id="order-plan">Professional Plan</span>
+                    <small>Monthly subscription</small>
+                </div>
+                <div class="order-row" style="margin-top:10px">
+                    <span>Token allocation</span>
+                    <span id="order-tokens">2,500 RT</span>
+                </div>
+                <div class="order-row total">
+                    <span>Total due</span>
+                    <span id="order-price">€7.99</span>
+                </div>
+            </div>
+
+            <label class="field-label">CARDHOLDER NAME</label>
+            <input class="field" id="card-name" placeholder="John Doe" maxlength="40">
+
+            <div class="demo-card">
+                <div class="card-top">
+                    <strong style="font-size:12px;letter-spacing:1px">RAZY BANK</strong>
+                    <span style="font-size:11px">DEMO CARD</span>
+                </div>
+                <div class="card-chip"></div>
+                <div class="card-number" id="preview-number">DEMO •••• ••••</div>
+                <div class="card-bottom">
+                    <div>
+                        <small>CARDHOLDER</small>
+                        <span id="preview-name">YOUR NAME</span>
+                    </div>
+                    <div>
+                        <small>EXPIRES</small>
+                        <span id="preview-expiry">MM/YY</span>
+                    </div>
+                </div>
+            </div>
+
+            <label class="field-label">DEMO CARD NUMBER</label>
+            <input class="field" id="card-number" placeholder="Enter any demo number" maxlength="25">
+
+            <div class="field-row">
+                <div>
+                    <label class="field-label">EXPIRY (DEMO)</label>
+                    <input class="field" id="expiry" placeholder="MM/YY" maxlength="5">
+                </div>
+                <div>
+                    <label class="field-label">SECURITY CODE (DEMO)</label>
+                    <input class="field" id="cvv" placeholder="Any demo code" maxlength="8">
+                </div>
+            </div>
+
+            <label class="field-label">EMAIL ADDRESS</label>
+            <input class="field" id="email" type="email" placeholder="you@example.com">
+
+            <button class="pay-button" onclick="processPayment()">
+                Pay €7.99 · Place order
+            </button>
+
+            <div class="secure">✓ DEMO CHECKOUT · NO REAL PAYMENT PROCESSING</div>
+            <p class="demo-notice">Use fictional placeholder details only. This simulation does not accept or store real payment credentials.</p>
+        </div>
+
+        <!-- PROCESSING -->
+        <div class="processing" id="processing">
+            <div class="spinner"></div>
+            <h2 id="processing-title">Processing payment...</h2>
+            <p id="processing-text">Contacting Razy's imaginary payment department.</p>
+            <div class="receipt">
+                <div><span>Order</span><span id="processing-order">#RAZY-000000</span></div>
+                <div><span>Plan</span><span id="processing-plan">Professional</span></div>
+                <div><span>Status</span><span style="color:#d6b6ff">Processing</span></div>
+            </div>
+        </div>
+
+        <!-- SUCCESS -->
+        <div class="success" id="success">
+            <div class="checkmark">✓</div>
+            <h2>Payment successful!</h2>
+            <p>Your order has been successfully placed.<br>Razy can now afford to talk.</p>
+
+            <div class="receipt">
+                <div><span>Order ID</span><strong id="success-id">#RAZY-000000</strong></div>
+                <div><span>Subscription</span><strong id="success-plan">Professional</strong></div>
+                <div><span>Tokens purchased</span><strong id="success-tokens">2,500 RT</strong></div>
+                <div><span>Amount</span><strong id="success-price">€7.99</strong></div>
+                <div><span>Payment status</span><strong style="color:#72e7a1">SUCCESSFUL</strong></div>
+                <div><span>Order status</span><strong style="color:#72e7a1">PLACED</strong></div>
+            </div>
+
+            <p style="color:#a78aff;font-weight:800;margin-bottom:20px">⚡ TOKENS SUCCESSFULLY CREDITED!</p>
+            <button class="pay-button" onclick="finishOrder()">Return to dashboard</button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+let balance = 0;
+let selected = {};
+let orderID = '';
+
+const $ = id => document.getElementById(id);
+
+function openCheckout(plan,tokens,price){
+    selected={plan,tokens,price};
+
+    $('order-plan').textContent=plan+' Plan';
+    $('order-tokens').textContent=tokens.toLocaleString()+' RT';
+    $('order-price').textContent='€'+price;
+    $('pay-button')?.remove();
+
+    $('checkout-form').style.display='block';
+    $('processing').classList.remove('active');
+    $('success').classList.remove('active');
+
+    document.querySelector('.checkout .pay-button').textContent='Pay €'+price+' · Place order';
+
+    $('overlay').classList.add('show');
+}
+
+function closeCheckout(){
+    $('overlay').classList.remove('show');
+}
+
+$('card-name').addEventListener('input',e=>{
+    $('preview-name').textContent=e.target.value.toUpperCase()||'YOUR NAME';
+});
+
+$('card-number').addEventListener('input',e=>{
+    const value=e.target.value.replace(/\s/g,'');
+    $('preview-number').textContent=value
+        ? value.slice(0,4)+' •••• ••••'
+        : 'DEMO •••• ••••';
+});
+
+$('expiry').addEventListener('input',e=>{
+    $('preview-expiry').textContent=e.target.value||'MM/YY';
+});
+
+function processPayment(){
+    const name=$('card-name').value.trim();
+    const number=$('card-number').value.trim();
+    const expiry=$('expiry').value.trim();
+    const cvv=$('cvv').value.trim();
+    const email=$('email').value.trim();
+
+    if(!name||!number||!expiry||!cvv||!email){
+        alert('Please fill in all demo checkout fields!');
+        return;
+    }
+
+    if(!email.includes('@')){
+        alert('Please enter a valid-looking email address.');
+        return;
+    }
+
+    // Discard the dummy input. No payment credentials are processed or saved.
+    $('card-number').value='';
+    $('cvv').value='';
+
+    orderID='RAZY-'+Math.random().toString(36).substring(2,9).toUpperCase();
+
+    $('checkout-form').style.display='none';
+    $('processing').classList.add('active');
+
+    $('processing-order').textContent='#'+orderID;
+    $('processing-plan').textContent=selected.plan;
+
+    const messages=[
+        ['Processing payment...','Contacting Razy\'s imaginary payment department.'],
+        ['Verifying order...','Checking your fictional subscription details.'],
+        ['Allocating tokens...','Preparing tokens for Razy.'],
+        ['Finalizing purchase...','Almost there. Razy is getting excited.']
+    ];
+
+    let step=0;
+
+    function nextStep(){
+        if(step<messages.length){
+            $('processing-title').textContent=messages[step][0];
+            $('processing-text').textContent=messages[step][1];
+            step++;
+            setTimeout(nextStep,1000);
+        }else{
+            completeOrder();
+        }
+    }
+
+    nextStep();
+}
+
+function completeOrder(){
+    balance+=selected.tokens;
+
+    $('balance').textContent=balance.toLocaleString();
+    $('balance-info').textContent='Razy has received new funding. Let him speak!';
+
+    $('processing').classList.remove('active');
+    $('success').classList.add('active');
+
+    $('success-id').textContent='#'+orderID;
+    $('success-plan').textContent=selected.plan;
+    $('success-tokens').textContent=selected.tokens.toLocaleString()+' RT';
+    $('success-price').textContent='€'+selected.price;
+}
+
+function finishOrder(){
+    closeCheckout();
+    $('success').classList.remove('active');
+    $('checkout-form').style.display='block';
+    $('card-name').value='';
+    $('expiry').value='';
+    $('email').value='';
+    $('preview-name').textContent='YOUR NAME';
+    $('preview-expiry').textContent='MM/YY';
+    $('preview-number').textContent='DEMO •••• ••••';
+}
+</script>
+
+<div id="grid-bg"></div><div id="cursor-glow"></div>
+<script>
+(()=>{
+const h1=document.querySelector('h1');
+h1.childNodes.forEach(n=>{if(n.nodeType===3&&n.textContent.trim()){const f=document.createDocumentFragment();n.textContent.split(/(\s+)/).forEach((w,i)=>{if(!w.trim()){f.append(w);return}const s=document.createElement('span');s.className='word';s.textContent=w;f.append(s)});n.replaceWith(f)}});
+h1.querySelectorAll('.word').forEach((w,i)=>w.style.animationDelay=(.15+i*.12)+'s');
+const els=[...document.querySelectorAll('.balance,.section-heading,.plan,.warning,footer')];
+els.forEach(e=>e.classList.add('reveal'));
+document.querySelectorAll('.plan').forEach((p,i)=>{p.style.transitionDelay=(i*.12)+'s';p.querySelectorAll('.features li').forEach((li,j)=>li.style.transitionDelay=(.4+i*.12+j*.07)+'s')});
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);setTimeout(()=>e.target.style.transitionDelay='',1200)}}),{threshold:.15});
+els.forEach(e=>io.observe(e));
+const g=document.getElementById('cursor-glow');
+addEventListener('pointermove',e=>{g.style.left=e.clientX+'px';g.style.top=e.clientY+'px'});
+document.querySelectorAll('.plan').forEach(p=>{
+ p.addEventListener('pointermove',e=>{const r=p.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;p.style.setProperty('--mx',x*100+'%');p.style.setProperty('--my',y*100+'%');p.style.transform=`rotateY(${(x-.5)*10}deg) rotateX(${(.5-y)*10}deg) translateY(-6px)`});
+ p.addEventListener('pointerleave',()=>p.style.transform='')});
+const card=document.querySelector('.demo-card');
+if(card){const s=document.createElement('div');s.className='sheen';card.append(s);
+ card.addEventListener('pointermove',e=>{const r=card.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;card.style.transform=`perspective(800px) rotateY(${x*16}deg) rotateX(${-y*16}deg)`});
+ card.addEventListener('pointerleave',()=>card.style.transform='')}
+document.addEventListener('pointerdown',e=>{const b=e.target.closest('.buy,.pay-button');if(!b)return;const r=b.getBoundingClientRect(),d=Math.max(r.width,r.height),s=document.createElement('span');s.className='ripple';s.style.cssText=`width:${d}px;height:${d}px;left:${e.clientX-r.left-d/2}px;top:${e.clientY-r.top-d/2}px`;b.append(s);setTimeout(()=>s.remove(),700)});
+const bal=document.getElementById('balance');let last=bal.textContent;
+new MutationObserver(()=>{if(bal.textContent===last)return;last=bal.textContent;const n=bal.closest('.balance-number');n.classList.remove('bump');void n.offsetWidth;n.classList.add('bump')}).observe(bal,{childList:true,characterData:true,subtree:true});
+const succ=document.querySelector('.success');
+if(succ)new MutationObserver(()=>{if(succ.classList.contains('active')){const c=['#9270ff','#d16bff','#7fd4ff','#6de6a2','#f7d98a'];for(let i=0;i<80;i++){const k=document.createElement('div');k.className='confetti';k.style.left=Math.random()*100+'vw';k.style.background=c[i%5];k.style.animationDuration=(1.8+Math.random()*1.8)+'s';k.style.animationDelay=Math.random()*.4+'s';document.body.append(k);setTimeout(()=>k.remove(),4500)}}}).observe(succ,{attributes:true,attributeFilter:['class']});
+})();
+</script>
+</body>
+</html>
