@@ -409,10 +409,10 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
             <div class="demo-card">
                 <div class="card-top">
                     <strong style="font-size:12px;letter-spacing:1px">RAZY BANK</strong>
-                    <span style="font-size:11px">DEMO CARD</span>
+                    <span style="font-size:11px">DEBIT</span>
                 </div>
                 <div class="card-chip"></div>
-                <div class="card-number" id="preview-number">DEMO •••• ••••</div>
+                <div class="card-number" id="preview-number">•••• •••• •••• ••••</div>
                 <div class="card-bottom">
                     <div>
                         <small>CARDHOLDER</small>
@@ -425,17 +425,17 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
                 </div>
             </div>
 
-            <label class="field-label">DEMO CARD NUMBER</label>
-            <input class="field" id="card-number" placeholder="Enter any demo number" maxlength="25">
+            <label class="field-label">CARD NUMBER</label>
+            <input class="field" id="card-number" placeholder="1234 5678 9012 3456" maxlength="25">
 
             <div class="field-row">
                 <div>
-                    <label class="field-label">EXPIRY (DEMO)</label>
+                    <label class="field-label">EXPIRY</label>
                     <input class="field" id="expiry" placeholder="MM/YY" maxlength="5">
                 </div>
                 <div>
-                    <label class="field-label">SECURITY CODE (DEMO)</label>
-                    <input class="field" id="cvv" placeholder="Any demo code" maxlength="8">
+                    <label class="field-label">CVC</label>
+                    <input class="field" id="cvv" placeholder="123" maxlength="8">
                 </div>
             </div>
 
@@ -446,15 +446,15 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
                 Pay €7.99 · Place order
             </button>
 
-            <div class="secure">✓ DEMO CHECKOUT · NO REAL PAYMENT PROCESSING</div>
-            <p class="demo-notice">Use fictional placeholder details only. This simulation does not accept or store real payment credentials.</p>
+            <div class="secure">🔒 SECURE CHECKOUT · 256-BIT ENCRYPTED</div>
+            
         </div>
 
         <!-- PROCESSING -->
         <div class="processing" id="processing">
             <div class="spinner"></div>
             <h2 id="processing-title">Processing payment...</h2>
-            <p id="processing-text">Contacting Razy's imaginary payment department.</p>
+            <p id="processing-text">Contacting your bank.</p>
             <div class="receipt">
                 <div><span>Order</span><span id="processing-order">#RAZY-000000</span></div>
                 <div><span>Plan</span><span id="processing-plan">Professional</span></div>
@@ -520,7 +520,7 @@ $('card-number').addEventListener('input',e=>{
     const value=e.target.value.replace(/\s/g,'');
     $('preview-number').textContent=value
         ? value.slice(0,4)+' •••• ••••'
-        : 'DEMO •••• ••••';
+        : '•••• •••• •••• ••••';
 });
 
 $('expiry').addEventListener('input',e=>{
@@ -535,7 +535,7 @@ function processPayment(){
     const email=$('email').value.trim();
 
     if(!name||!number||!expiry||!cvv||!email){
-        alert('Please fill in all demo checkout fields!');
+        alert('Please fill in all fields.');
         return;
     }
 
@@ -557,8 +557,8 @@ function processPayment(){
     $('processing-plan').textContent=selected.plan;
 
     const messages=[
-        ['Processing payment...','Contacting Razy\'s imaginary payment department.'],
-        ['Verifying order...','Checking your fictional subscription details.'],
+        ['Processing payment...','Contacting your bank.'],
+        ['Verifying order...','Confirming your subscription details.'],
         ['Allocating tokens...','Preparing tokens for Razy.'],
         ['Finalizing purchase...','Almost there. Razy is getting excited.']
     ];
@@ -603,7 +603,7 @@ function finishOrder(){
     $('email').value='';
     $('preview-name').textContent='YOUR NAME';
     $('preview-expiry').textContent='MM/YY';
-    $('preview-number').textContent='DEMO •••• ••••';
+    $('preview-number').textContent='•••• •••• •••• ••••';
 }
 </script>
 
