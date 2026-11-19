@@ -16,6 +16,7 @@
   --warp-muted: #9b9e87;
   --warp-signal: #bed575;
   --warp-scan: #dce4bc12;
+  --warp-blackout: #000000;
 }
 .void-approach {height:55vh;display:grid;place-items:center;position:relative;background:linear-gradient(var(--bg),var(--void-bg));}
 .void-approach span {font:10px monospace;color:var(--muted);opacity:.35;letter-spacing:3px;}
@@ -95,6 +96,9 @@
 .warp-screen video {object-fit:contain;display:none;}
 .warp-screen[data-phase="video"] img {display:none;}
 .warp-screen[data-phase="video"] video {display:block;}
+.timewarp-blackout {overflow:hidden;background:var(--warp-blackout);}
+.warp-screen[data-phase="aftermath"] {background:var(--warp-blackout);touch-action:none;}
+.warp-screen[data-phase="aftermath"] img,.warp-screen[data-phase="aftermath"] video {display:none;}
 @media(max-width:600px) {
   .warp-hud,.warp-bottom {left:20px;right:20px;font-size:8px;}
   .warp-hud {top:24px;}

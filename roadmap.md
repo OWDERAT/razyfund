@@ -6,3 +6,4 @@
 - [x] Add deeper time-warp category and crossfade uploaded Still Life track.
 - [x] Add ten-second quiet transition, dog/scream jumpscare, and video with audio.
 - [x] Test sequence timing, cancellation, media playback, and mobile layout.
+- [x] Keep the screen black and silent after static until refresh; verify scrolling and Escape cannot restore it.

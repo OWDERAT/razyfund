@@ -18,4 +18,9 @@ describe('deeper Scoobert sequence', () => {
   it('cancels every stage when scrolling out', () => {
     for (const elapsed of [5, 10, 12, 20]) expect(timewarpPhase(elapsed, false)).toBe('idle');
   });
+  it('stays black after the static ends even when scrolling out', () => {
+    expect(timewarpPhase(20, true, true, true)).toBe('aftermath');
+    expect(timewarpPhase(0, false, false, false, true)).toBe('aftermath');
+    expect(timewarpPhase(0, false, false, false, false)).toBe('idle');
+  });
 });
