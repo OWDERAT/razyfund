@@ -1,4 +1,7 @@
 import { descentDepth, descentVolume } from './scoobert-depth.js';
+import { setupTimewarp } from './timewarp.js';
+
+const timewarp = setupTimewarp();
 
 const section = document.getElementById('scoobert');
 const root = document.documentElement;
@@ -56,7 +59,8 @@ document.addEventListener('visibilitychange', () => {
 function tick(time) {
   const delta = Math.min((time - lastTime) / 1000, .1);
   lastTime = time;
-  const target = document.hidden ? 0 : descentVolume(depth);
+  const warp = timewarp.tick(time);
+  const target = document.hidden || warp.hush ? 0 : descentVolume(depth) * (1 - warp.depth);
   volume += (target - volume) * Math.min(1, delta * 7);
   if (Math.abs(volume - target) < .001) volume = target;
   audio.volume = Math.max(0, Math.min(.7, volume));

@@ -399,6 +399,26 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
     </div>
   </div>
 </section>
+<section id="timewarp" class="timewarp" aria-labelledby="timewarp-title" data-phase="idle">
+  <div class="warp-room">
+    <img id="timewarp-image" class="warp-image" alt="The same abandoned hallway, years too late" loading="lazy" width="1536" height="1024">
+    <div class="warp-fog" aria-hidden="true"></div>
+    <div class="warp-hud"><span>ARCHIVE / <b>LEVEL ∅</b></span><span id="timewarp-status">TIME COORDINATES INVALID</span></div>
+    <div class="warp-content">
+      <p class="warp-label">[ HIDDEN CATEGORY / 005 — STILL HERE ]</p>
+      <div class="warp-year" id="timewarp-year" aria-hidden="true">????</div>
+      <h2 id="timewarp-title"><span>You traveled</span><em>too fast.</em></h2>
+      <p class="warp-story">Scoobert never got his main mod.<br><strong>He's been waiting for you here.</strong></p>
+      <p class="warp-echo" aria-hidden="true">you promised you would come back.</p>
+    </div>
+    <div class="warp-bottom"><span>LAST SEEN: BEFORE YOU LEFT<br><b>ELAPSED TIME: UNDEFINED</b></span><button id="timewarp-return" class="void-tool" aria-label="Return to surface" title="Return to surface"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 7-7 7 7M12 5v15"/></svg></button></div>
+    <div class="warp-rip" aria-hidden="true"></div>
+  </div>
+</section>
+<div id="timewarp-screen" class="warp-screen" data-phase="idle" hidden>
+  <img id="timewarp-dog" alt="Scoobert suddenly appears" width="447" height="447">
+  <video id="timewarp-video" playsinline preload="auto" aria-label="Interrupted archive transmission"></video>
+</div>
 <div id="void-interference" aria-hidden="true"></div>
 <script type="module" src="/scoobert.js"></script>
 
