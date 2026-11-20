@@ -10,17 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiPublicWalletRouteImport } from './routes/api/public/wallet'
 import { Route as ApiAdminRouteImport } from './routes/api/admin'
+import { Route as ApiPublicWalletRouteImport } from './routes/api/public/wallet'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicWalletRoute = ApiPublicWalletRouteImport.update({
-  id: '/api/public/wallet',
-  path: '/api/public/wallet',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdminRoute = ApiAdminRouteImport.update({
@@ -28,35 +23,40 @@ const ApiAdminRoute = ApiAdminRouteImport.update({
   path: '/api/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicWalletRoute = ApiPublicWalletRouteImport.update({
+  id: '/api/public/wallet',
+  path: '/api/public/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/api/public/wallet': typeof ApiPublicWalletRoute
   '/api/admin': typeof ApiAdminRoute
+  '/api/public/wallet': typeof ApiPublicWalletRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/api/public/wallet': typeof ApiPublicWalletRoute
   '/api/admin': typeof ApiAdminRoute
+  '/api/public/wallet': typeof ApiPublicWalletRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/api/public/wallet': typeof ApiPublicWalletRoute
   '/api/admin': typeof ApiAdminRoute
+  '/api/public/wallet': typeof ApiPublicWalletRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/public/wallet' | '/api/admin'
+  fullPaths: '/' | '/api/admin' | '/api/public/wallet'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/public/wallet' | '/api/admin'
-  id: '__root__' | '/' | '/api/public/wallet' | '/api/admin'
+  to: '/' | '/api/admin' | '/api/public/wallet'
+  id: '__root__' | '/' | '/api/admin' | '/api/public/wallet'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ApiPublicWalletRoute: typeof ApiPublicWalletRoute
   ApiAdminRoute: typeof ApiAdminRoute
+  ApiPublicWalletRoute: typeof ApiPublicWalletRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -68,13 +68,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/wallet': {
-      id: '/api/public/wallet'
-      path: '/api/public/wallet'
-      fullPath: '/api/public/wallet'
-      preLoaderRoute: typeof ApiPublicWalletRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/admin': {
       id: '/api/admin'
       path: '/api/admin'
@@ -82,13 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/wallet': {
+      id: '/api/public/wallet'
+      path: '/api/public/wallet'
+      fullPath: '/api/public/wallet'
+      preLoaderRoute: typeof ApiPublicWalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ApiPublicWalletRoute: ApiPublicWalletRoute,
   ApiAdminRoute: ApiAdminRoute,
+  ApiPublicWalletRoute: ApiPublicWalletRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
