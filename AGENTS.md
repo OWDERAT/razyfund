@@ -15,8 +15,7 @@ Lovable, not by hand. With the [Lovable MCP](https://mcp.lovable.dev)
 connected, `send_message` asks Lovable to do it; otherwise ask the user to
 use the editor.
 
-- **Database.** Do not add or edit `supabase/migrations/` or `drizzle/`.
-  Ask Lovable to change the schema.
+- **Storage.** This project is intentionally standalone: do not add SQL, Supabase, Drizzle, or external database dependencies. The current process-memory store is ephemeral.
 - **Generated files.** Do not edit a file whose header says it is automatically
   generated.
 - **AI gateway.** Keep model calls on Lovable's gateway, and keep
@@ -32,4 +31,4 @@ use the editor.
 - Keep the supplied standalone page inside the index iframe; pass bundled image and CDN audio URLs through its query parameters so assets resolve after publishing.
 - Keep the hidden descent's depth/volume calculations in a browser-safe standalone module with regression tests; scroll position is the sole reversible source of visual and audio intensity.
 - Keep the deeper encounter's timed phases in a browser-safe tested module; scrolling out cancels unfinished encounters, media ended events sequence the scream and video without overlap, and the completed blackout stays latched in memory until refresh.
-- Wallet identity is carried by an HMAC-signed HttpOnly cookie; balances and Scoobert vote counts are stored server-side in Supabase. Scoobert claims use an atomic database cooldown. Never credit tokens from browser requests; purchases remain disabled until a verified payment provider and webhook are configured.
+- Wallet identity is carried by an HMAC-signed HttpOnly cookie; balances and Scoobert vote counts are stored in the standalone server-process memory store. Vote cooldowns are enforced server-side. Never credit tokens from browser requests; purchases remain disabled until a verified payment provider and webhook are configured.
