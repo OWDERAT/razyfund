@@ -16,7 +16,6 @@ let depth = 0;
 let volume = 0;
 let lastTime = 0;
 let lastGlitch = 0;
-let supporters = 0;
 const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 document.getElementById('void-image').src = new URLSearchParams(location.search).get('corridor') || '';
 
@@ -37,9 +36,9 @@ addEventListener('touchend', () => unlock(true), { passive: true });
 document.getElementById('void-return').addEventListener('click', () => {
   window.scrollTo({ top: 0, behavior: reduce.matches ? 'instant' : 'smooth' });
 });
-document.getElementById('void-fund').addEventListener('click', () => {
-  supporters += 1;
-  document.getElementById('void-supporters').textContent = String(supporters).padStart(3, '0');
+document.getElementById('void-fund').addEventListener('click', async () => {
+  const w = await window.razyWallet?.({ action: 'vote' });
+  if (w) window.razyShowWallet(w);
   document.getElementById('void-message').textContent = 'your vote made it through. he remembers.';
 });
 function measure() {

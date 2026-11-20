@@ -625,8 +625,20 @@ function processPayment(){
     nextStep();
 }
 
-function completeOrder(){
-    balance+=selected.tokens;
+async function wallet(body){
+    try{const r=await fetch('/api/public/wallet',body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body),credentials:'same-origin'}:{credentials:'same-origin'});return await r.json();}catch{return null}
+}
+function showWallet(w){
+    if(!w)return;
+    balance=w.balance;
+    $('balance').textContent=balance.toLocaleString();
+    if(balance>0)$('balance-info').textContent='Razy has received new funding. Let him speak!';
+    const v=$('void-supporters');if(v)v.textContent=String(w.votes).padStart(3,'0');
+}
+window.razyWallet=wallet;window.razyShowWallet=showWallet;
+wallet().then(showWallet);
+async function completeOrder(){
+    showWallet(await wallet({action:'buy',plan:selected.plan}));
 
     $('balance').textContent=balance.toLocaleString();
     $('balance-info').textContent='Razy has received new funding. Let him speak!';
