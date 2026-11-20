@@ -20,11 +20,11 @@ export const Route = createFileRoute('/api/public/wallet')({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const secret = process.env.WALLET_SECRET!;
+        const secret = process.env['WALLET_SECRET']!;
         return respond(await openWallet(readCookie(request), secret), true, secret);
       },
       POST: async ({ request }) => {
-        const secret = process.env.WALLET_SECRET!;
+        const secret = process.env['WALLET_SECRET']!;
         // Only same-origin pages may change the wallet.
         const origin = request.headers.get('origin');
         if (origin && origin !== new URL(request.url).origin) return new Response('forbidden', { status: 403 });
