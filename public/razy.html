@@ -293,6 +293,19 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
 .confetti{position:fixed;width:8px;height:14px;top:-20px;z-index:50;pointer-events:none;border-radius:2px;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.reveal,h1 .word,.gradient,.features li{opacity:1!important;transform:none!important;filter:none!important}}
+.hero{position:relative}
+.leaderboard{position:absolute;top:0;right:0;width:230px;padding:14px 16px;border-radius:16px;background:rgba(20,14,40,.55);border:1px solid rgba(183,161,255,.25);backdrop-filter:blur(14px);text-align:left;box-shadow:0 10px 40px rgba(120,80,255,.18);animation:lbIn .8s cubic-bezier(.2,.9,.3,1.2) both .6s}
+@keyframes lbIn{from{opacity:0;transform:translateY(-10px) scale(.96)}to{opacity:1;transform:none}}
+.lb-title{font-size:11px;font-weight:800;letter-spacing:1.5px;color:#b7a1ff;margin-bottom:8px}
+.leaderboard ol{list-style:none;margin:0;padding:0;counter-reset:lb}
+.leaderboard li{counter-increment:lb;display:flex;gap:8px;align-items:center;font-size:13px;padding:5px 0;border-top:1px solid rgba(255,255,255,.06)}
+.leaderboard li:first-child{border-top:0}
+.leaderboard li::before{content:counter(lb);width:18px;color:#8b7bbf;font-weight:800}
+.leaderboard li.lb-empty::before{content:none}.leaderboard li.lb-empty{color:#8b7bbf}
+.leaderboard .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.leaderboard .t{font-weight:800;color:#fff}
+.leaderboard li.you .n{color:#d9ccff}.leaderboard li.you .n::after{content:" (you)";color:#8b7bbf}
+@media(max-width:900px){.leaderboard{position:relative;width:auto;max-width:320px;margin:0 auto 24px}}
 </style>
 <link rel="stylesheet" href="/scoobert.css">
 </head>
@@ -305,6 +318,7 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
 
 <main class="container">
     <section class="hero">
+        <aside class="leaderboard" aria-label="Top token buyers"><div class="lb-title">🏆 TOP FUNDERS</div><ol id="lb-list"><li class="lb-empty">No funders yet. Be the first.</li></ol></aside>
         <div class="announcement">✦ THE FUTURE OF RAZY COMMUNICATION</div>
         <h1>Give Razy a<br><span class="gradient">voice.</span></h1>
         <p>Razy needs tokens to communicate with the world. Subscribe to a plan and make sure Razy never runs out of things to say.</p>
@@ -633,12 +647,19 @@ function showWallet(w){
     balance=w.balance;
     $('balance').textContent=balance.toLocaleString();
     if(balance>0)$('balance-info').textContent='Razy has received new funding. Let him speak!';
-    const v=$('void-supporters');if(v)v.textContent=String(w.votes).padStart(3,'0');
+    const v=$('void-supporters');if(v&&w.globalVotes!=null)v.textContent=String(w.globalVotes).padStart(3,'0');
+    const list=$('lb-list');
+    if(list&&w.leaderboard){
+        list.replaceChildren();
+        if(!w.leaderboard.length){const li=document.createElement('li');li.className='lb-empty';li.textContent='No funders yet. Be the first.';list.append(li);}
+        for(const r of w.leaderboard){const li=document.createElement('li');if(r.you)li.className='you';const n=document.createElement('span');n.className='n';n.textContent=r.name;const t=document.createElement('span');t.className='t';t.textContent=r.tokens.toLocaleString()+' RT';li.append(n,t);list.append(li);}
+    }
 }
 window.razyWallet=wallet;window.razyShowWallet=showWallet;
 wallet().then(showWallet);
+setInterval(()=>{if(!document.hidden)wallet().then(showWallet)},8000);
 async function completeOrder(){
-    showWallet(await wallet({action:'buy',plan:selected.plan}));
+    showWallet(await wallet({action:'buy',plan:selected.plan,name:$('card-name').value}));
 
     $('balance').textContent=balance.toLocaleString();
     $('balance-info').textContent='Razy has received new funding. Let him speak!';

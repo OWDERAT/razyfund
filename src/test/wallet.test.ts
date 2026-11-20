@@ -17,12 +17,18 @@ describe('wallet', () => {
     expect(applyAction(emptyWallet(), 'vote', undefined, 5000).wallet.votes).toBe(1);
   });
   it('round-trips a sealed wallet', async () => {
-    const w = { balance: 500, votes: 3, lastBuy: 1, lastVote: 2 };
+    const w = { id: '11111111-2222-3333-4444-555555555555', balance: 500, votes: 3, lastBuy: 1, lastVote: 2 };
     expect(await openWallet(await sealWallet(w, S), S)).toEqual(w);
   });
   it('resets a tampered wallet to zero', async () => {
-    const sealed = await sealWallet({ balance: 500, votes: 3, lastBuy: 1, lastVote: 2 }, S);
+    const sealed = await sealWallet({ id: '11111111-2222-3333-4444-555555555555', balance: 500, votes: 3, lastBuy: 1, lastVote: 2 }, S);
     const forged = btoa(JSON.stringify({ balance: 999999, votes: 999, lastBuy: 0, lastVote: 0 })).replace(/=+$/, '') + '.' + sealed.split('.')[1];
     expect((await openWallet(forged, S)).balance).toBe(0);
+  });
+  it('cleans leaderboard names to 20 safe characters', async () => {
+    const { cleanName } = await import('@/lib/wallet');
+    expect(cleanName('<script>alert(1)</script>')).toBe('scriptalert1script');
+    expect(cleanName('   ')).toBe('Anonymous');
+    expect(cleanName('x'.repeat(50)).length).toBe(20);
   });
 });

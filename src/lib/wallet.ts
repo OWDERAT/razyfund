@@ -5,8 +5,11 @@ export const VOTE_COOLDOWN_MS = 1000;
 export const MAX_BALANCE = 10_000_000;
 export const MAX_VOTES = 999;
 
-export type Wallet = { balance: number; votes: number; lastBuy: number; lastVote: number };
-export const emptyWallet = (): Wallet => ({ balance: 0, votes: 0, lastBuy: 0, lastVote: 0 });
+export type Wallet = { id: string; balance: number; votes: number; lastBuy: number; lastVote: number };
+export const emptyWallet = (): Wallet => ({ id: crypto.randomUUID(), balance: 0, votes: 0, lastBuy: 0, lastVote: 0 });
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+// Leaderboard names: printable, trimmed, max 20 chars.
+export const cleanName = (x: unknown) => (typeof x === 'string' ? x.replace(/[^\p{L}\p{N} ._-]/gu, '').trim().slice(0, 20) : '') || 'Anonymous';
 
 export function applyAction(w: Wallet, action: unknown, plan: unknown, now: number): { wallet: Wallet; ok: boolean } {
   if (action === 'buy') {
@@ -40,7 +43,7 @@ export async function openWallet(token: string | undefined, secret: string): Pro
     if (!valid) return emptyWallet();
     const v = JSON.parse(new TextDecoder().decode(unb64(body)));
     const n = (x: unknown) => (typeof x === 'number' && Number.isFinite(x) && x >= 0 ? x : 0);
-    return { balance: Math.min(MAX_BALANCE, n(v.balance)), votes: Math.min(MAX_VOTES, n(v.votes)), lastBuy: n(v.lastBuy), lastVote: n(v.lastVote) };
+    return { id: typeof v.id === 'string' && UUID.test(v.id) ? v.id : crypto.randomUUID(), balance: Math.min(MAX_BALANCE, n(v.balance)), votes: Math.min(MAX_VOTES, n(v.votes)), lastBuy: n(v.lastBuy), lastVote: n(v.lastVote) };
   } catch {
     return emptyWallet();
   }
