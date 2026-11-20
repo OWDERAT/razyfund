@@ -658,5 +658,77 @@ const succ=document.querySelector('.success');
 if(succ)new MutationObserver(()=>{if(succ.classList.contains('active')){const c=['#9270ff','#d16bff','#7fd4ff','#6de6a2','#f7d98a'];for(let i=0;i<80;i++){const k=document.createElement('div');k.className='confetti';k.style.left=Math.random()*100+'vw';k.style.background=c[i%5];k.style.animationDuration=(1.8+Math.random()*1.8)+'s';k.style.animationDelay=Math.random()*.4+'s';document.body.append(k);setTimeout(()=>k.remove(),4500)}}}).observe(succ,{attributes:true,attributeFilter:['class']});
 })();
 </script>
+
+<style id="razy-admin-styles">
+#razy-admin-overlay{position:fixed;inset:0;z-index:10000;display:none;overflow:auto;background:rgba(4,5,10,.94);backdrop-filter:blur(16px);padding:24px 14px;color:#f7f7ff;font-family:Inter,system-ui,sans-serif}
+#razy-admin-overlay.razy-admin-open{display:block}
+#razy-admin-overlay *{box-sizing:border-box}
+.razy-admin-wrap{max-width:1120px;margin:4vh auto;background:#10111a;border:1px solid #39304e;border-radius:18px;padding:clamp(16px,3vw,30px);box-shadow:0 24px 100px #000b}
+.razy-admin-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.razy-admin-title{font-size:clamp(20px,4vw,30px);font-weight:900;letter-spacing:.04em;margin:0}
+.razy-admin-muted{color:#a4a1b7;font-size:13px;line-height:1.5}
+.razy-admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:14px;margin-top:18px}
+.razy-admin-card{background:#171824;border:1px solid #302d40;border-radius:13px;padding:16px;min-width:0}
+.razy-admin-card h3{margin:0 0 12px;font-size:15px}
+#razy-admin-overlay input,#razy-admin-overlay select{width:100%;padding:11px 12px;margin:5px 0;background:#0d0e16;color:#fff;border:1px solid #39374c;border-radius:8px;font:inherit;min-width:0}
+#razy-admin-overlay button{border:0;border-radius:8px;background:#865cff;color:#fff;font:700 13px inherit;padding:11px 14px;cursor:pointer;margin:5px 4px 5px 0}
+#razy-admin-overlay button.secondary{background:#302c43}
+#razy-admin-overlay button.danger{background:#963d50}
+#razy-admin-overlay button:disabled{opacity:.5;cursor:wait}
+.razy-admin-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.razy-admin-row>*{flex:1;min-width:0}
+.razy-admin-status{min-height:18px;color:#f3c987;font-size:12px;white-space:pre-wrap;margin-top:6px}
+.razy-admin-list{max-height:260px;overflow:auto}
+.razy-admin-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid #302d40;font-size:12px;overflow-wrap:anywhere}
+.razy-admin-item:first-child{border-top:0}
+#razy-admin-login{max-width:420px;margin:10vh auto}
+#razy-admin-close{background:#302c43}
+@media(max-width:560px){#razy-admin-overlay{padding:8px}.razy-admin-wrap{margin:8px auto}.razy-admin-item{align-items:flex-start;flex-direction:column}}
+</style>
+<div id="razy-admin-overlay" aria-hidden="true">
+ <main class="razy-admin-wrap">
+  <div class="razy-admin-top"><div><p class="razy-admin-muted" style="margin:0 0 5px">PRIVATE CONTROL CENTER</p><h2 class="razy-admin-title">RAZY / ADMIN</h2></div><button id="razy-admin-close" class="secondary" type="button">Close ×</button></div>
+  <section id="razy-admin-login" class="razy-admin-card">
+   <h3>Administrator authentication</h3><p class="razy-admin-muted">This panel is part of the main website. Access is verified by the server.</p>
+   <input id="razy-admin-password" type="password" autocomplete="current-password" placeholder="Administrator password">
+   <button id="razy-admin-signin" type="button">Sign in</button><div id="razy-admin-login-status" class="razy-admin-status" role="status"></div>
+  </section>
+  <section id="razy-admin-dashboard" hidden>
+   <div class="razy-admin-top" style="margin-top:18px"><p class="razy-admin-muted">ADMINISTRATOR SESSION · ALL CHANGES ARE AUDITED</p><button id="razy-admin-logout" class="secondary" type="button">Sign out</button></div>
+   <div class="razy-admin-grid">
+    <section class="razy-admin-card"><h3>Wallet management</h3><input id="razy-admin-player" placeholder="User ID (UUID)"><div class="razy-admin-row"><select id="razy-admin-mode"><option value="add">Add tokens</option><option value="remove">Remove tokens</option><option value="set">Set balance</option></select><input id="razy-admin-amount" type="number" min="0" max="10000000" placeholder="Amount"></div><button id="razy-admin-adjust" type="button">Apply balance change</button><div id="razy-admin-wallet-status" class="razy-admin-status"></div></section>
+    <section class="razy-admin-card"><h3>Rename user</h3><input id="razy-admin-rename-player" placeholder="User ID (UUID)"><input id="razy-admin-rename-name" maxlength="20" placeholder="New username"><button id="razy-admin-rename" type="button">Save username</button><div id="razy-admin-rename-status" class="razy-admin-status"></div></section>
+    <section class="razy-admin-card"><h3>Launch live event</h3><select id="razy-admin-event-type"><option value="rain">Image rain</option><option value="announcement">Announcement</option><option value="banner">Special banner</option><option value="maintenance">Maintenance</option></select><input id="razy-admin-event-title" placeholder="Event title / announcement"><input id="razy-admin-event-image" type="url" placeholder="Image URL (HTTPS)"><input id="razy-admin-event-sound" type="url" placeholder="Optional sound URL (HTTPS)"><div class="razy-admin-row"><input id="razy-admin-event-count" type="number" min="1" max="35" value="14" placeholder="Images"><input id="razy-admin-event-duration" type="number" min="1" max="1440" value="10" placeholder="Minutes"></div><button id="razy-admin-create-event" type="button">Start event</button><div id="razy-admin-event-status" class="razy-admin-status"></div></section>
+   </div>
+   <section class="razy-admin-card" style="margin-top:14px"><div class="razy-admin-top"><h3>Users and wallets</h3><button id="razy-admin-refresh" class="secondary" type="button">Refresh</button></div><div id="razy-admin-users" class="razy-admin-list razy-admin-muted">Loading…</div></section>
+   <section class="razy-admin-card" style="margin-top:14px"><h3>Live and recent events</h3><div id="razy-admin-events" class="razy-admin-list razy-admin-muted"></div></section>
+   <section class="razy-admin-card" style="margin-top:14px"><h3>Administrator audit log</h3><div id="razy-admin-audit" class="razy-admin-list razy-admin-muted" style="white-space:pre-wrap"></div></section>
+  </section>
+ </main>
+</div>
+<script id="razy-admin-script">
+(()=>{
+ const $=id=>document.getElementById('razy-admin-'+id);
+ const overlay=$('overlay');
+ const open=()=>{overlay.classList.add('razy-admin-open');overlay.setAttribute('aria-hidden','false');$('password').focus()};
+ const close=()=>{overlay.classList.remove('razy-admin-open');overlay.setAttribute('aria-hidden','true')};
+ // Private shortcut: Ctrl + Shift + A. The server still enforces authentication.
+ document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.shiftKey&&e.key.toLowerCase()==='a'){e.preventDefault();open()}if(e.key==='Escape'&&overlay.classList.contains('razy-admin-open'))close()});
+ $('close').addEventListener('click',close);
+ async function api(body){const r=await fetch('/api/admin',{method:'POST',headers:{'content-type':'application/json'},credentials:'same-origin',cache:'no-store',body:JSON.stringify(body)});return {status:r.status,data:await r.json().catch(()=>({}))}}
+ async function load(){const r=await fetch('/api/admin',{credentials:'same-origin',cache:'no-store'});if(!r.ok){$('dashboard').hidden=true;$('login').hidden=false;return}const d=await r.json();$('login').hidden=true;$('dashboard').hidden=false;
+  const users=$('users');users.replaceChildren();for(const u of d.users||[]){const row=document.createElement('div');row.className='razy-admin-item';const label=document.createElement('span');label.textContent=`${u.user_profiles?.username||'Anonymous'} · ${Number(u.balance).toLocaleString()} RT · ${u.player_id}`;const choose=document.createElement('button');choose.className='secondary';choose.textContent='Select';choose.onclick=()=>{$('player').value=u.player_id;$('rename-player').value=u.player_id};row.append(label,choose);users.append(row)}if(!users.children.length)users.textContent='No users found.';
+  const events=$('events');events.replaceChildren();for(const ev of d.events||[]){const row=document.createElement('div');row.className='razy-admin-item';const label=document.createElement('span');label.textContent=`${ev.active?'ACTIVE':'ENDED'} · ${ev.event_type} · ${ev.title||''}`;row.append(label);if(ev.active){const stop=document.createElement('button');stop.className='danger';stop.textContent='Stop';stop.onclick=async()=>{const x=await api({action:'stop_event',event_id:ev.id});if(x.data.ok)load()};row.append(stop)}events.append(row)}if(!events.children.length)events.textContent='No events.';
+  $('audit').textContent=(d.audit||[]).map(a=>`${a.created_at} · ${a.action} · ${a.target_player||''} · ${JSON.stringify(a.details)}`).join('\n')||'No actions recorded.';
+ }
+ $('signin').addEventListener('click',async()=>{const r=await api({action:'login',password:$('password').value});$('login-status').textContent=r.data.error||'Signed in.';if(r.data.ok){$('password').value='';await load()}});
+ $('password').addEventListener('keydown',e=>{if(e.key==='Enter')$('signin').click()});
+ $('adjust').addEventListener('click',async()=>{const r=await api({action:'adjust_tokens',player_id:$('player').value,mode:$('mode').value,amount:Number($('amount').value)});$('wallet-status').textContent=r.data.error||'Balance updated.';if(r.data.ok)load()});
+ $('rename').addEventListener('click',async()=>{const r=await api({action:'rename_user',player_id:$('rename-player').value,username:$('rename-name').value});$('rename-status').textContent=r.data.error||'Username updated.';if(r.data.ok)load()});
+ $('create-event').addEventListener('click',async()=>{const r=await api({action:'create_event',event_type:$('event-type').value,title:$('event-title').value,image_url:$('event-image').value||null,sound_url:$('event-sound').value||null,count:Number($('event-count').value),duration_minutes:Number($('event-duration').value)});$('event-status').textContent=r.data.error||'Event started.';if(r.data.ok)load()});
+ $('refresh').addEventListener('click',load);$('logout').addEventListener('click',async()=>{await api({action:'logout'});$('dashboard').hidden=true;$('login').hidden=false;$('login-status').textContent='Signed out.'});
+})();
+</script>
+
 </body>
 </html>
