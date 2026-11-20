@@ -727,13 +727,30 @@ if(succ)new MutationObserver(()=>{if(succ.classList.contains('active')){const c=
   }
  });
  $('close').addEventListener('click',close);
- async function api(body){const r=await fetch('/api/admin',{method:'POST',headers:{'content-type':'application/json'},credentials:'same-origin',cache:'no-store',body:JSON.stringify(body)});return {status:r.status,data:await r.json().catch(()=>({}))}}
- async function load(){const r=await fetch('/api/admin',{credentials:'same-origin',cache:'no-store'});if(!r.ok){$('dashboard').hidden=true;$('login').hidden=false;return}const d=await r.json();$('login').hidden=true;$('dashboard').hidden=false;
+ async function readApiResponse(r){
+  const contentType=r.headers.get('content-type')||'';
+  if(!contentType.toLowerCase().includes('application/json'))return {error:r.status===404?'Admin API route not found. The updated server build has not been deployed.':`The server returned a non-JSON response (HTTP ${r.status}). The admin API may not be deployed.`};
+  try{return await r.json()}catch{return {error:'The server returned invalid JSON.'}}
+ }
+ async function api(body){const r=await fetch('/api/admin',{method:'POST',headers:{'content-type':'application/json'},credentials:'same-origin',cache:'no-store',body:JSON.stringify(body)});return {status:r.status,ok:r.ok,data:await readApiResponse(r)}}
+ async function load(){const r=await fetch('/api/admin',{credentials:'same-origin',cache:'no-store'});const d=await readApiResponse(r);if(!r.ok||d.error){$('dashboard').hidden=true;$('login').hidden=false;$('login-status').textContent=d.error||`Admin session check failed (HTTP ${r.status}).`;return false}if(!Array.isArray(d.users)){$('dashboard').hidden=true;$('login').hidden=false;$('login-status').textContent='The admin API response is incomplete. Check server deployment and database configuration.';return false}$('login').hidden=true;$('dashboard').hidden=false;
   const users=$('users');users.replaceChildren();for(const u of d.users||[]){const row=document.createElement('div');row.className='razy-admin-item';const label=document.createElement('span');label.textContent=`${u.user_profiles?.username||'Anonymous'} · ${Number(u.balance).toLocaleString()} RT · ${u.player_id}`;const choose=document.createElement('button');choose.className='secondary';choose.textContent='Select';choose.onclick=()=>{$('player').value=u.player_id;$('rename-player').value=u.player_id};row.append(label,choose);users.append(row)}if(!users.children.length)users.textContent='No users found.';
   const events=$('events');events.replaceChildren();for(const ev of d.events||[]){const row=document.createElement('div');row.className='razy-admin-item';const label=document.createElement('span');label.textContent=`${ev.active?'ACTIVE':'ENDED'} · ${ev.event_type} · ${ev.title||''}`;row.append(label);if(ev.active){const stop=document.createElement('button');stop.className='danger';stop.textContent='Stop';stop.onclick=async()=>{const x=await api({action:'stop_event',event_id:ev.id});if(x.data.ok)load()};row.append(stop)}events.append(row)}if(!events.children.length)events.textContent='No events.';
   $('audit').textContent=(d.audit||[]).map(a=>`${a.created_at} · ${a.action} · ${a.target_player||''} · ${JSON.stringify(a.details)}`).join('\n')||'No actions recorded.';
+  return true;
  }
- $('signin').addEventListener('click',async()=>{const r=await api({action:'login',password:$('password').value});$('login-status').textContent=r.data.error||'Signed in.';if(r.data.ok){$('password').value='';await load()}});
+ $('signin').addEventListener('click',async()=>{
+  const button=$('signin');button.disabled=true;$('login-status').textContent='Checking credentials…';
+  try{
+   const r=await api({action:'login',password:$('password').value});
+   if(!r.ok||r.data.ok!==true){
+    const messages={invalid_credentials:'Incorrect administrator password.',too_many_attempts:'Too many attempts. Wait before trying again.',admin_auth_unavailable:'Administrator authentication is unavailable. The server-side database setup is missing or unavailable.',forbidden:'Request blocked by server security checks.',unauthorized:'Not authenticated.'};
+    $('login-status').textContent=messages[r.data.error]||r.data.error||`Login failed (HTTP ${r.status}). No administrator session was created.`;return;
+   }
+   $('password').value='';const loaded=await load();if(loaded)$('login-status').textContent='Authenticated. Administrator dashboard loaded.';
+  }catch(err){$('login-status').textContent='Could not contact the admin server. Check deployment and try again.';}
+  finally{button.disabled=false;}
+ });
  $('password').addEventListener('keydown',e=>{if(e.key==='Enter')$('signin').click()});
  $('adjust').addEventListener('click',async()=>{const r=await api({action:'adjust_tokens',player_id:$('player').value,mode:$('mode').value,amount:Number($('amount').value)});$('wallet-status').textContent=r.data.error||'Balance updated.';if(r.data.ok)load()});
  $('rename').addEventListener('click',async()=>{const r=await api({action:'rename_user',player_id:$('rename-player').value,username:$('rename-name').value});$('rename-status').textContent=r.data.error||'Username updated.';if(r.data.ok)load()});

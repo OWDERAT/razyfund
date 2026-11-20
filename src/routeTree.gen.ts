@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiPublicWalletRouteImport } from './routes/api/public/wallet'
+import { Route as ApiAdminRouteImport } from './routes/api/admin'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +23,40 @@ const ApiPublicWalletRoute = ApiPublicWalletRouteImport.update({
   path: '/api/public/wallet',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminRoute = ApiAdminRouteImport.update({
+  id: '/api/admin',
+  path: '/api/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/public/wallet': typeof ApiPublicWalletRoute
+  '/api/admin': typeof ApiAdminRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/public/wallet': typeof ApiPublicWalletRoute
+  '/api/admin': typeof ApiAdminRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/public/wallet': typeof ApiPublicWalletRoute
+  '/api/admin': typeof ApiAdminRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/public/wallet'
+  fullPaths: '/' | '/api/public/wallet' | '/api/admin'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/public/wallet'
-  id: '__root__' | '/' | '/api/public/wallet'
+  to: '/' | '/api/public/wallet' | '/api/admin'
+  id: '__root__' | '/' | '/api/public/wallet' | '/api/admin'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiPublicWalletRoute: typeof ApiPublicWalletRoute
+  ApiAdminRoute: typeof ApiAdminRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWalletRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin': {
+      id: '/api/admin'
+      path: '/api/admin'
+      fullPath: '/api/admin'
+      preLoaderRoute: typeof ApiAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiPublicWalletRoute: ApiPublicWalletRoute,
+  ApiAdminRoute: ApiAdminRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

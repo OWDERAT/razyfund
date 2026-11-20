@@ -31,7 +31,7 @@ The server must have the Supabase service-role key. The key is used only by serv
 
 ## Admin panel
 
-After configuring the secrets and applying the SQL, visit `/admin.html`. Access is protected by a four-hour signed HttpOnly session. The server verifies the password hash; hiding the URL is not used as a security control.
+After configuring the secrets and applying the SQL, open the main website and press `O` outside any text field to open the integrated admin overlay. Access is protected by a four-hour signed HttpOnly session. The `/api/admin` server route is registered in the project route tree. The server verifies the password hash; hiding the URL is not used as a security control.
 
 The panel supports user lookup, token add/remove/set, username changes, live event creation/stopping, and an audit log. Event state is polled by the public page every five seconds. Image and sound URLs must use HTTPS.
 
