@@ -713,7 +713,19 @@ if(succ)new MutationObserver(()=>{if(succ.classList.contains('active')){const c=
  const open=()=>{overlay.classList.add('razy-admin-open');overlay.setAttribute('aria-hidden','false');$('password').focus()};
  const close=()=>{overlay.classList.remove('razy-admin-open');overlay.setAttribute('aria-hidden','true')};
  // Private shortcut: Ctrl + Shift + A. The server still enforces authentication.
- document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.shiftKey&&e.key.toLowerCase()==='a'){e.preventDefault();open()}if(e.key==='Escape'&&overlay.classList.contains('razy-admin-open'))close()});
+ // Private shortcut: press O. Ignore editable controls so usernames can contain O safely.
+ const isTypingTarget=target=>target instanceof HTMLElement&&(
+  target.isContentEditable||
+  target.matches('input,textarea,select,[contenteditable=""],[contenteditable="true"],[role="textbox"]')||
+  !!target.closest('input,textarea,select,[contenteditable=""],[contenteditable="true"],[role="textbox"]')
+ );
+ document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&overlay.classList.contains('razy-admin-open')){close();return}
+  if(e.key.toLowerCase()==='o'&&!e.ctrlKey&&!e.altKey&&!e.metaKey&&!e.shiftKey&&!e.repeat&&!e.isComposing&&!isTypingTarget(e.target)&&!isTypingTarget(document.activeElement)){
+   e.preventDefault();
+   open();
+  }
+ });
  $('close').addEventListener('click',close);
  async function api(body){const r=await fetch('/api/admin',{method:'POST',headers:{'content-type':'application/json'},credentials:'same-origin',cache:'no-store',body:JSON.stringify(body)});return {status:r.status,data:await r.json().catch(()=>({}))}}
  async function load(){const r=await fetch('/api/admin',{credentials:'same-origin',cache:'no-store'});if(!r.ok){$('dashboard').hidden=true;$('login').hidden=false;return}const d=await r.json();$('login').hidden=true;$('dashboard').hidden=false;
