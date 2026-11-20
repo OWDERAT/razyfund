@@ -1,42 +1,63 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { cleanName, openWallet, sealWallet } from '@/lib/wallet';
-import { getUser, getGlobalVotes, leaderboard, listEvents, vote, usernameTaken } from '@/lib/standalone-store';
+import { applyAction, cleanName, openWallet, PLAN_TOKENS, sealWallet, type Wallet } from '@/lib/wallet';
 
 const COOKIE = 'razy_wallet';
-const readCookie = (req: Request) => (req.headers.get('cookie') ?? '').split(/;\s*/).find(c => c.startsWith(COOKIE + '='))?.slice(COOKIE.length + 1);
-const secret = () => process.env['WALLET_SECRET'] || process.env['ADMIN_SESSION_SECRET'] || '';
-const sameOrigin = (req: Request) => req.headers.get('origin') === new URL(req.url).origin;
+const readCookie = (req: Request) =>
+  (req.headers.get('cookie') ?? '').split(/;\s*/).find((c) => c.startsWith(COOKIE + '='))?.slice(COOKIE.length + 1);
 
-async function response(user: ReturnType<typeof getUser>, ok: boolean, status = 200) {
-  const key = secret();
-  if (key.length < 32) return Response.json({ error: 'wallet_secret_not_configured' }, { status: 503 });
-  const token = await sealWallet({ id:user.player_id, balance:user.balance, votes:user.votes, lastBuy:0, lastVote:user.lastVote }, key);
-  return Response.json({ ok, balance:user.balance, votes:user.votes, username:user.username, globalVotes:getGlobalVotes(), leaderboard:leaderboard(user.player_id), events:listEvents() }, {
-    status, headers:{ 'cache-control':'no-store', 'set-cookie':`${COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=31536000` }
+async function db() {
+  return (await import('@/integrations/supabase/client.server')).supabaseAdmin;
+}
+
+async function shared() {
+  const admin = await db();
+  const [votes, board] = await Promise.all([
+    admin.from('scoobert_votes').select('total').eq('id', 1).maybeSingle(),
+    admin.from('token_leaderboard').select('player_id,name,tokens').order('tokens', { ascending: false }).limit(5),
+  ]);
+  return { globalVotes: Number(votes.data?.total ?? 0), board: board.data ?? [] };
+}
+
+async function respond(w: Wallet, ok: boolean, secret: string) {
+  const sealed = await sealWallet(w, secret);
+  const { globalVotes, board } = await shared();
+  const leaderboard = board.map((r) => ({ name: r.name, tokens: Number(r.tokens), you: r.player_id === w.id }));
+  return new Response(JSON.stringify({ ok, balance: w.balance, votes: w.votes, globalVotes, leaderboard }), {
+    headers: {
+      'content-type': 'application/json',
+      'cache-control': 'no-store',
+      'set-cookie': `${COOKIE}=${sealed}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=31536000`,
+    },
   });
 }
 
-export const Route = createFileRoute('/api/public/wallet')({ server:{ handlers:{
-  GET: async ({request}) => {
-    if (secret().length < 32) return Response.json({error:'wallet_secret_not_configured'},{status:503});
-    const wallet = await openWallet(readCookie(request), secret());
-    return response(getUser(wallet.id, wallet), true);
+export const Route = createFileRoute('/api/public/wallet')({
+  server: {
+    handlers: {
+      GET: async ({ request }) => {
+        const secret = process.env['WALLET_SECRET']!;
+        return respond(await openWallet(readCookie(request), secret), true, secret);
+      },
+      POST: async ({ request }) => {
+        const secret = process.env['WALLET_SECRET']!;
+        // Only same-origin pages may change the wallet.
+        const origin = request.headers.get('origin');
+        if (origin && origin !== new URL(request.url).origin) return new Response('forbidden', { status: 403 });
+        const body = (await request.json().catch(() => ({}))) as { action?: unknown; plan?: unknown; name?: unknown };
+        const current = await openWallet(readCookie(request), secret);
+        const { wallet, ok } = applyAction(current, body.action, body.plan, Date.now());
+        if (ok) {
+          const admin = await db();
+          if (body.action === 'vote') await admin.rpc('add_scoobert_vote');
+          if (body.action === 'buy')
+            await admin.rpc('add_leaderboard_tokens', {
+              p_player: wallet.id,
+              p_name: cleanName(body.name),
+              p_tokens: PLAN_TOKENS[body.plan as string] ?? 0,
+            });
+        }
+        return respond(wallet, ok, secret);
+      },
+    },
   },
-  POST: async ({request}) => {
-    if (!sameOrigin(request)) return Response.json({error:'forbidden'},{status:403});
-    if (secret().length < 32) return Response.json({error:'wallet_secret_not_configured'},{status:503});
-    const body = await request.json().catch(()=>null) as {action?:unknown;name?:unknown}|null;
-    if (!body || typeof body.action !== 'string') return Response.json({error:'invalid_request'},{status:400});
-    const wallet = await openWallet(readCookie(request), secret());
-    const user = getUser(wallet.id, wallet);
-    if (body.action === 'buy') return response(user, false, 409);
-    if (body.action === 'vote') { const accepted = vote(user.player_id); return response(user, accepted, accepted ? 200 : 429); }
-    if (body.action === 'set_name') {
-      const name=cleanName(body.name);
-      if(name.length<3)return response(user,false,400);
-      if(usernameTaken(name,user.player_id)) return response(user,false,409);
-      user.username=name; user.updated_at=new Date().toISOString(); return response(user,true);
-    }
-    return response(user,false,400);
-  }
-}}});
+});
