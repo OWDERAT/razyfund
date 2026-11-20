@@ -306,6 +306,13 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
 .leaderboard .t{font-weight:800;color:#fff}
 .leaderboard li.you .n{color:#d9ccff}.leaderboard li.you .n::after{content:" (you)";color:#8b7bbf}
 @media(max-width:900px){.leaderboard{position:relative;width:auto;max-width:320px;margin:0 auto 24px}}
+
+.account-box{max-width:750px;margin:-25px auto 55px;padding:20px 24px;background:#11131b;border:1px solid #262838;border-radius:16px}
+.account-box strong{font-size:14px}.account-box p{color:var(--muted);font-size:12px;margin-top:5px}
+.account-controls{display:flex;gap:10px;margin-top:14px}.account-controls .field{flex:1;min-width:0}.account-controls .buy{width:auto;padding:0 18px;white-space:nowrap}
+#username-status{min-height:16px}.payment-unavailable{padding:16px;border:1px solid #6a4d2c;background:#2b2115;color:#ffd99a;border-radius:10px;font-size:13px;line-height:1.6;margin-top:18px}
+#live-event-layer{position:fixed;inset:0;z-index:100;pointer-events:none;overflow:hidden}#live-event-layer .rain-item{position:absolute;top:-12vh;object-fit:contain;animation:razyRain linear forwards;filter:drop-shadow(0 4px 10px #0008)}@keyframes razyRain{to{transform:translate3d(var(--drift),115vh,0) rotate(var(--spin));opacity:.8}}
+@media(max-width:560px){.account-controls{flex-direction:column}.account-controls .buy{padding:13px}}
 </style>
 <link rel="stylesheet" href="/scoobert.css">
 </head>
@@ -331,6 +338,18 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
             <div class="balance-info" id="balance-info">Razy is currently waiting for funding.</div>
         </div>
         <div class="balance-icon">⚡</div>
+    </section>
+
+    <section class="account-box" aria-label="Create your leaderboard account">
+        <div>
+            <strong>Join the leaderboard</strong>
+            <p>Choose a unique username for this browser.</p>
+        </div>
+        <div class="account-controls">
+            <input id="username-input" class="field" maxlength="20" minlength="3" placeholder="Your username" autocomplete="nickname">
+            <button id="username-save" class="buy" type="button">Save username</button>
+        </div>
+        <p id="username-status" role="status" aria-live="polite"></p>
     </section>
 
     <div class="section-heading">
@@ -388,6 +407,7 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
 </main>
 
 <footer>© 2026 <strong>Razy Tokens™</strong> — Making Razy Speak Since 2026.<br><br>Powered by questionable financial decisions.</footer>
+<div id="live-event-layer" aria-hidden="true"></div>
 
 <div class="void-approach" aria-hidden="true"><span>↓</span></div>
 <section id="scoobert" class="scoobert" aria-labelledby="scoobert-title">
@@ -463,50 +483,15 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
                 </div>
             </div>
 
-            <label class="field-label">CARDHOLDER NAME</label>
-            <input class="field" id="card-name" placeholder="John Doe" maxlength="40">
-
-            <div class="demo-card">
-                <div class="card-top">
-                    <strong style="font-size:12px;letter-spacing:1px">RAZY BANK</strong>
-                    <span style="font-size:11px">DEBIT</span>
-                </div>
-                <div class="card-chip"></div>
-                <div class="card-number" id="preview-number">•••• •••• •••• ••••</div>
-                <div class="card-bottom">
-                    <div>
-                        <small>CARDHOLDER</small>
-                        <span id="preview-name">YOUR NAME</span>
-                    </div>
-                    <div>
-                        <small>EXPIRES</small>
-                        <span id="preview-expiry">MM/YY</span>
-                    </div>
-                </div>
+            <div class="payment-unavailable" role="status">
+                Checkout is currently disabled. This project does not have a verified payment provider connected. Do not enter card details here. No browser request can credit tokens.
             </div>
-
-            <label class="field-label">CARD NUMBER</label>
-            <input class="field" id="card-number" placeholder="1234 5678 9012 3456" maxlength="25">
-
-            <div class="field-row">
-                <div>
-                    <label class="field-label">EXPIRY</label>
-                    <input class="field" id="expiry" placeholder="MM/YY" maxlength="5">
-                </div>
-                <div>
-                    <label class="field-label">CVC</label>
-                    <input class="field" id="cvv" placeholder="123" maxlength="8">
-                </div>
-            </div>
-
-            <label class="field-label">EMAIL ADDRESS</label>
-            <input class="field" id="email" type="email" placeholder="you@example.com">
 
             <button class="pay-button" onclick="processPayment()">
                 Pay €7.99 · Place order
             </button>
 
-            <div class="secure">🔒 SECURE CHECKOUT · 256-BIT ENCRYPTED</div>
+            <div class="secure">Payment processing is unavailable until a real payment provider is configured.</div>
             
         </div>
 
@@ -572,80 +557,56 @@ function closeCheckout(){
     $('overlay').classList.remove('show');
 }
 
-$('card-name').addEventListener('input',e=>{
-    $('preview-name').textContent=e.target.value.toUpperCase()||'YOUR NAME';
-});
-
-$('card-number').addEventListener('input',e=>{
-    const value=e.target.value.replace(/\s/g,'');
-    $('preview-number').textContent=value
-        ? value.slice(0,4)+' •••• ••••'
-        : '•••• •••• •••• ••••';
-});
-
-$('expiry').addEventListener('input',e=>{
-    $('preview-expiry').textContent=e.target.value||'MM/YY';
-});
-
 function processPayment(){
-    const name=$('card-name').value.trim();
-    const number=$('card-number').value.trim();
-    const expiry=$('expiry').value.trim();
-    const cvv=$('cvv').value.trim();
-    const email=$('email').value.trim();
-
-    if(!name||!number||!expiry||!cvv||!email){
-        alert('Please fill in all fields.');
-        return;
-    }
-
-    if(!email.includes('@')){
-        alert('Please enter a valid-looking email address.');
-        return;
-    }
-
-    // Discard the dummy input. No payment credentials are processed or saved.
-    $('card-number').value='';
-    $('cvv').value='';
-
-    orderID='RAZY-'+Math.random().toString(36).substring(2,9).toUpperCase();
-
-    $('checkout-form').style.display='none';
-    $('processing').classList.add('active');
-
-    $('processing-order').textContent='#'+orderID;
-    $('processing-plan').textContent=selected.plan;
-
-    const messages=[
-        ['Processing payment...','Contacting your bank.'],
-        ['Verifying order...','Confirming your subscription details.'],
-        ['Allocating tokens...','Preparing tokens for Razy.'],
-        ['Finalizing purchase...','Almost there. Razy is getting excited.']
-    ];
-
-    let step=0;
-
-    function nextStep(){
-        if(step<messages.length){
-            $('processing-title').textContent=messages[step][0];
-            $('processing-text').textContent=messages[step][1];
-            step++;
-            setTimeout(nextStep,1000);
-        }else{
-            completeOrder();
-        }
-    }
-
-    nextStep();
+    const notice=$('checkout-form').querySelector('.payment-unavailable');
+    if(notice) notice.textContent='Checkout is disabled: no verified payment provider is connected. No payment was taken and no tokens were credited.';
 }
 
 async function wallet(body){
     try{const r=await fetch('/api/public/wallet',body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body),credentials:'same-origin'}:{credentials:'same-origin'});return await r.json();}catch{return null}
 }
+async function saveUsername(){
+    const input=$('username-input');
+    const status=$('username-status');
+    const name=input.value.trim();
+    if(name.length<3||name.length>20){status.textContent='Username must be 3–20 characters.';return;}
+    $('username-save').disabled=true;
+    status.textContent='Saving…';
+    const result=await wallet({action:'set_name',name});
+    $('username-save').disabled=false;
+    if(result?.ok){status.textContent='Username saved.';showWallet(result);}
+    else if(result?.username){status.textContent='That username is already taken or invalid.';}
+    else{status.textContent='That username may already be taken. Try another.';}
+}
+$('username-save')?.addEventListener('click',saveUsername);
+$('username-input')?.addEventListener('keydown',e=>{if(e.key==='Enter')saveUsername();});
+let activeEventIds=new Set();
+let eventSound=null;
+function renderEvents(events){
+    const active=(events||[]).filter(e=>e&&e.id);
+    const ids=new Set(active.map(e=>e.id));
+    for(const id of activeEventIds)if(!ids.has(id)){const node=document.querySelector(`[data-event-id="${CSS.escape(id)}"]`);node?.remove();}
+    for(const event of active){
+        if(!activeEventIds.has(event.id)&&event.sound_url&&/^https:\/\//i.test(event.sound_url)){try{eventSound=new Audio(event.sound_url);eventSound.volume=.35;eventSound.play().catch(()=>{});}catch{}}
+        const layer=$('live-event-layer');
+        if(layer.querySelector(`[data-event-id="${CSS.escape(event.id)}"]`))continue;
+        const group=document.createElement('div');group.dataset.eventId=event.id;group.style.position='absolute';group.style.inset='0';
+        if(event.event_type==='rain'&&event.image_url&&/^https:\/\//i.test(event.image_url)){
+            const count=Math.max(1,Math.min(35,Number(event.payload?.count)||14));
+            for(let i=0;i<count;i++){const img=document.createElement('img');img.className='rain-item';img.src=event.image_url;img.alt='';img.style.left=(Math.random()*100)+'%';img.style.width=(24+Math.random()*38)+'px';img.style.height='auto';img.style.animationDuration=(4+Math.random()*6)+'s';img.style.animationDelay=(-Math.random()*8)+'s';img.style.setProperty('--drift',(Math.random()*160-80)+'px');img.style.setProperty('--spin',(Math.random()*240-120)+'deg');group.append(img);}
+        }else if(['announcement','banner','maintenance'].includes(event.event_type)){
+            const banner=document.createElement('div');banner.textContent=event.title||event.event_type.toUpperCase();banner.style.cssText='position:absolute;top:12px;left:50%;transform:translateX(-50%);max-width:min(90vw,700px);padding:14px 22px;border:1px solid #9270ff;background:#171426ee;color:white;border-radius:12px;font-weight:800;text-align:center;box-shadow:0 8px 35px #0008';group.append(banner);
+        }
+        layer.append(group);
+    }
+    activeEventIds=ids;
+}
 function showWallet(w){
     if(!w)return;
     balance=w.balance;
     $('balance').textContent=balance.toLocaleString();
+    renderEvents(w.events||[]);
+    if(w.username&&$('username-input'))$('username-input').value=w.username;
     if(balance>0)$('balance-info').textContent='Razy has received new funding. Let him speak!';
     const v=$('void-supporters');if(v&&w.globalVotes!=null)v.textContent=String(w.globalVotes).padStart(3,'0');
     const list=$('lb-list');
@@ -657,32 +618,16 @@ function showWallet(w){
 }
 window.razyWallet=wallet;window.razyShowWallet=showWallet;
 wallet().then(showWallet);
-setInterval(()=>{if(!document.hidden)wallet().then(showWallet)},8000);
+setInterval(()=>{if(!document.hidden)wallet().then(showWallet)},5000);
 async function completeOrder(){
-    showWallet(await wallet({action:'buy',plan:selected.plan,name:$('card-name').value}));
-
-    $('balance').textContent=balance.toLocaleString();
-    $('balance-info').textContent='Razy has received new funding. Let him speak!';
-
-    $('processing').classList.remove('active');
-    $('success').classList.add('active');
-
-    $('success-id').textContent='#'+orderID;
-    $('success-plan').textContent=selected.plan;
-    $('success-tokens').textContent=selected.tokens.toLocaleString()+' RT';
-    $('success-price').textContent='€'+selected.price;
+    processPayment();
 }
 
 function finishOrder(){
     closeCheckout();
     $('success').classList.remove('active');
     $('checkout-form').style.display='block';
-    $('card-name').value='';
-    $('expiry').value='';
-    $('email').value='';
-    $('preview-name').textContent='YOUR NAME';
-    $('preview-expiry').textContent='MM/YY';
-    $('preview-number').textContent='•••• •••• •••• ••••';
+
 }
 </script>
 
