@@ -1,63 +1,49 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { applyAction, cleanName, openWallet, PLAN_TOKENS, sealWallet, type Wallet } from '@/lib/wallet';
+import { z } from 'zod';
 
-const COOKIE = 'razy_wallet';
-const readCookie = (req: Request) =>
-  (req.headers.get('cookie') ?? '').split(/;\s*/).find((c) => c.startsWith(COOKIE + '='))?.slice(COOKIE.length + 1);
+const actionSchema = z.object({ action: z.enum(['vote', 'buy']), plan: z.string().max(40).optional(), name: z.string().max(40).optional() }).strict();
 
-async function db() {
-  return (await import('@/integrations/supabase/client.server')).supabaseAdmin;
-}
-
-async function shared() {
-  const admin = await db();
-  const [votes, board] = await Promise.all([
-    admin.from('scoobert_votes').select('total').eq('id', 1).maybeSingle(),
-    admin.from('token_leaderboard').select('player_id,name,tokens').order('tokens', { ascending: false }).limit(5),
-  ]);
-  return { globalVotes: Number(votes.data?.total ?? 0), board: board.data ?? [] };
-}
-
-async function respond(w: Wallet, ok: boolean, secret: string) {
-  const sealed = await sealWallet(w, secret);
-  const { globalVotes, board } = await shared();
-  const leaderboard = board.map((r) => ({ name: r.name, tokens: Number(r.tokens), you: r.player_id === w.id }));
-  return new Response(JSON.stringify({ ok, balance: w.balance, votes: w.votes, globalVotes, leaderboard }), {
-    headers: {
-      'content-type': 'application/json',
-      'cache-control': 'no-store',
-      'set-cookie': `${COOKIE}=${sealed}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=31536000`,
-    },
-  });
-}
-
-export const Route = createFileRoute('/api/public/wallet')({
-  server: {
-    handlers: {
-      GET: async ({ request }) => {
-        const secret = process.env['WALLET_SECRET']!;
-        return respond(await openWallet(readCookie(request), secret), true, secret);
-      },
-      POST: async ({ request }) => {
-        const secret = process.env['WALLET_SECRET']!;
-        // Only same-origin pages may change the wallet.
-        const origin = request.headers.get('origin');
-        if (origin && origin !== new URL(request.url).origin) return new Response('forbidden', { status: 403 });
-        const body = (await request.json().catch(() => ({}))) as { action?: unknown; plan?: unknown; name?: unknown };
-        const current = await openWallet(readCookie(request), secret);
-        const { wallet, ok } = applyAction(current, body.action, body.plan, Date.now());
-        if (ok) {
-          const admin = await db();
-          if (body.action === 'vote') await admin.rpc('add_scoobert_vote');
-          if (body.action === 'buy')
-            await admin.rpc('add_leaderboard_tokens', {
-              p_player: wallet.id,
-              p_name: cleanName(body.name),
-              p_tokens: PLAN_TOKENS[body.plan as string] ?? 0,
-            });
+export const Route = createFileRoute('/api/public/wallet')({ server: { handlers: {
+  GET: async ({ request }) => {
+    const store = await import('@/lib/secure-store.server');
+    try {
+      const [user, shared] = await Promise.all([store.verifiedUser(request), store.sharedState()]);
+      if (!user) return store.response({ ok: true, signedIn: false, balance: 0, votes: 0, ...shared });
+      // A signed legacy cookie can be transferred only once to a verified account.
+      const token = (request.headers.get('cookie') ?? '').split(/;\s*/).find(c => c.startsWith('razy_wallet='))?.slice(12);
+      if (token) {
+        const { openWallet } = await import('@/lib/wallet');
+        const secret = process.env['WALLET_SECRET'];
+        if (secret) {
+          const old = await openWallet(token, secret);
+          if (old.balance > 0 || old.votes > 0) {
+            const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+            const result = await supabaseAdmin.rpc('attach_legacy_wallet', { p_user: user.id, p_legacy: old.id, p_balance: old.balance, p_voted: old.votes > 0 });
+            if (result.error) throw new Error('Transfer failed');
+          }
         }
-        return respond(wallet, ok, secret);
-      },
-    },
+      }
+      const [wallet, profile] = await Promise.all([
+        user.client.from('wallet_accounts').select('balance,votes').eq('player_id', user.id).single(),
+        user.client.from('profiles').select('username').eq('id', user.id).single(),
+      ]);
+      if (wallet.error || profile.error) throw new Error('Account unavailable');
+      return store.response({ ok: true, signedIn: true, ...wallet.data, username: profile.data.username, ...shared, leaderboard: shared.leaderboard.map(row => ({ ...row, you: row.name === profile.data.username })) });
+    } catch { return store.response({ ok: false, error: 'Could not load account data. Please try again.' }, 503); }
   },
-});
+  POST: async ({ request }) => {
+    const store = await import('@/lib/secure-store.server');
+    if (!store.sameOrigin(request)) return store.response({ ok: false, error: 'forbidden' }, 403);
+    const body = actionSchema.safeParse(await store.boundedBody(request));
+    if (!body.success) return store.response({ ok: false, error: 'invalid_request' }, 400);
+    if (body.data.action === 'buy') return store.response({ ok: false, error: 'payment_required', message: 'No payment was processed. Tokens require verified payment or an administrator grant.' }, 403);
+    try {
+      const user = await store.verifiedUser(request);
+      if (!user) return store.response({ ok: false, error: 'sign_in_required' }, 401);
+      const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+      const result = await supabaseAdmin.rpc('claim_scoobert_vote', { p_player: user.id });
+      if (result.error) throw new Error('Vote failed');
+      return store.response({ ok: result.data, error: result.data ? null : 'already_voted' });
+    } catch { return store.response({ ok: false, error: 'Vote could not be saved. Try again.' }, 503); }
+  },
+} } });

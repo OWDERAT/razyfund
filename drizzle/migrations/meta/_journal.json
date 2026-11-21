@@ -8,6 +8,20 @@
       "when": 1795186908233,
       "tag": "0000_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795252833622,
+      "tag": "0001_secure_accounts_votes_admin_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795252882519,
+      "tag": "0002_public_live_events_and_legacy_wallet_transfer",
+      "breakpoints": true
     }
   ]
 }

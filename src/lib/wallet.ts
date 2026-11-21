@@ -3,7 +3,7 @@ export const PLAN_TOKENS: Record<string, number> = { Starter: 500, Professional:
 export const BUY_COOLDOWN_MS = 5000;
 export const VOTE_COOLDOWN_MS = 1000;
 export const MAX_BALANCE = 10_000_000;
-export const MAX_VOTES = 999;
+export const MAX_VOTES = 1;
 
 export type Wallet = { id: string; balance: number; votes: number; lastBuy: number; lastVote: number };
 export const emptyWallet = (): Wallet => ({ id: crypto.randomUUID(), balance: 0, votes: 0, lastBuy: 0, lastVote: 0 });
@@ -13,9 +13,9 @@ export const cleanName = (x: unknown) => (typeof x === 'string' ? x.replace(/[^\
 
 export function applyAction(w: Wallet, action: unknown, plan: unknown, now: number): { wallet: Wallet; ok: boolean } {
   if (action === 'buy') {
-    const tokens = typeof plan === 'string' && Object.hasOwn(PLAN_TOKENS, plan) ? PLAN_TOKENS[plan] : undefined;
-    if (!tokens || now - w.lastBuy < BUY_COOLDOWN_MS) return { wallet: w, ok: false };
-    return { wallet: { ...w, balance: Math.min(MAX_BALANCE, w.balance + tokens), lastBuy: now }, ok: true };
+    // No payment provider is connected: browser claims cannot authorize credits.
+    void plan;
+    return { wallet: w, ok: false };
   }
   if (action === 'vote') {
     if (now - w.lastVote < VOTE_COOLDOWN_MS || w.votes >= MAX_VOTES) return { wallet: w, ok: false };

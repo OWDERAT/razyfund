@@ -1,0 +1,56 @@
+CREATE TABLE public.wallet_accounts (player_id uuid PRIMARY KEY, balance bigint NOT NULL DEFAULT 0 CHECK(balance BETWEEN 0 AND 10000000), votes integer NOT NULL DEFAULT 0 CHECK(votes BETWEEN 0 AND 1), updated_at timestamptz NOT NULL DEFAULT now());
+GRANT SELECT ON public.wallet_accounts TO authenticated; GRANT ALL ON public.wallet_accounts TO service_role;
+ALTER TABLE public.wallet_accounts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY own_wallet ON public.wallet_accounts FOR SELECT TO authenticated USING(player_id=auth.uid());
+CREATE TABLE public.profiles (id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE, username text NOT NULL CHECK(char_length(username) BETWEEN 3 AND 20));
+GRANT SELECT ON public.profiles TO authenticated; GRANT ALL ON public.profiles TO service_role;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+CREATE POLICY own_profile ON public.profiles FOR SELECT TO authenticated USING(id=auth.uid());
+CREATE UNIQUE INDEX profiles_username_unique ON public.profiles(lower(username));
+CREATE FUNCTION public.create_razy_account() RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ BEGIN
+ INSERT INTO public.profiles(id,username) VALUES(NEW.id, COALESCE(NULLIF(NEW.raw_user_meta_data->>'username',''), 'User_'||substr(replace(NEW.id::text,'-',''),1,12)));
+ INSERT INTO public.wallet_accounts(player_id) VALUES(NEW.id);
+ RETURN NEW; END $$;
+REVOKE ALL ON FUNCTION public.create_razy_account() FROM PUBLIC,anon,authenticated;
+CREATE TRIGGER razy_account_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.create_razy_account();
+INSERT INTO public.profiles(id,username) SELECT id,'User_'||substr(replace(id::text,'-',''),1,12) FROM auth.users ON CONFLICT DO NOTHING;
+INSERT INTO public.wallet_accounts(player_id) SELECT id FROM auth.users ON CONFLICT DO NOTHING;
+CREATE TABLE public.scoobert_vote_claims (player_id uuid PRIMARY KEY, claimed_at timestamptz NOT NULL DEFAULT now());
+GRANT ALL ON public.scoobert_vote_claims TO service_role;
+ALTER TABLE public.scoobert_vote_claims ENABLE ROW LEVEL SECURITY;
+CREATE FUNCTION public.claim_scoobert_vote(p_player uuid) RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ BEGIN
+ IF NOT EXISTS(SELECT 1 FROM public.wallet_accounts WHERE player_id=p_player) THEN RETURN false; END IF;
+ INSERT INTO public.scoobert_vote_claims(player_id) VALUES(p_player) ON CONFLICT DO NOTHING;
+ IF NOT FOUND THEN RETURN false; END IF;
+ UPDATE public.wallet_accounts SET votes=1, updated_at=now() WHERE player_id=p_player;
+ UPDATE public.scoobert_votes SET total=total+1 WHERE id=1;
+ RETURN true; END $$;
+REVOKE ALL ON FUNCTION public.claim_scoobert_vote(uuid) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.claim_scoobert_vote(uuid) TO service_role;
+REVOKE EXECUTE ON FUNCTION public.add_scoobert_vote() FROM PUBLIC,anon,authenticated;
+REVOKE EXECUTE ON FUNCTION public.add_leaderboard_tokens(uuid,text,bigint) FROM PUBLIC,anon,authenticated;
+CREATE TABLE public.site_events (id uuid PRIMARY KEY DEFAULT gen_random_uuid(),event_type text NOT NULL CHECK(event_type IN ('rain','announcement','banner','maintenance')),title text NOT NULL DEFAULT '',image_url text,sound_url text,payload jsonb NOT NULL DEFAULT '{}',starts_at timestamptz NOT NULL DEFAULT now(),ends_at timestamptz NOT NULL,active boolean NOT NULL DEFAULT true,created_at timestamptz NOT NULL DEFAULT now());
+GRANT ALL ON public.site_events TO service_role;
+ALTER TABLE public.site_events ENABLE ROW LEVEL SECURITY;
+CREATE TABLE public.admin_audit_log (id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,action text NOT NULL,target_player uuid,details jsonb NOT NULL DEFAULT '{}',created_at timestamptz NOT NULL DEFAULT now());
+GRANT ALL ON public.admin_audit_log TO service_role;
+ALTER TABLE public.admin_audit_log ENABLE ROW LEVEL SECURITY;
+CREATE TABLE public.admin_sessions (token_hash text PRIMARY KEY,expires_at timestamptz NOT NULL);
+GRANT ALL ON public.admin_sessions TO service_role;
+ALTER TABLE public.admin_sessions ENABLE ROW LEVEL SECURITY;
+CREATE TABLE public.admin_login_limits (ip_hash text PRIMARY KEY,attempts integer NOT NULL DEFAULT 0,window_start timestamptz NOT NULL DEFAULT now());
+GRANT ALL ON public.admin_login_limits TO service_role;
+ALTER TABLE public.admin_login_limits ENABLE ROW LEVEL SECURITY;
+CREATE FUNCTION public.reserve_admin_login(p_ip_hash text) RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE n integer; BEGIN
+ INSERT INTO public.admin_login_limits(ip_hash,attempts) VALUES(p_ip_hash,1) ON CONFLICT(ip_hash) DO UPDATE SET attempts=CASE WHEN admin_login_limits.window_start < now()-interval '15 minutes' THEN 1 ELSE admin_login_limits.attempts+1 END,window_start=CASE WHEN admin_login_limits.window_start < now()-interval '15 minutes' THEN now() ELSE admin_login_limits.window_start END RETURNING attempts INTO n;
+ RETURN n<=5; END $$;
+REVOKE ALL ON FUNCTION public.reserve_admin_login(text) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.reserve_admin_login(text) TO service_role;
+CREATE FUNCTION public.admin_adjust_wallet_balance(p_player uuid,p_mode text,p_amount bigint) RETURNS bigint LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE n bigint; BEGIN
+ IF p_amount<0 OR p_amount>10000000 OR p_mode NOT IN ('add','remove','set') THEN RAISE EXCEPTION 'invalid adjustment'; END IF;
+ UPDATE public.wallet_accounts SET balance=greatest(0,least(10000000,CASE WHEN p_mode='set' THEN p_amount WHEN p_mode='add' THEN balance+p_amount ELSE balance-p_amount END)),updated_at=now() WHERE player_id=p_player RETURNING balance INTO n;
+ IF n IS NULL THEN RAISE EXCEPTION 'wallet not found'; END IF;
+ INSERT INTO public.admin_audit_log(action,target_player,details) VALUES('adjust_tokens',p_player,jsonb_build_object('mode',p_mode,'amount',p_amount,'new_balance',n));
+ RETURN n; END $$;
+REVOKE ALL ON FUNCTION public.admin_adjust_wallet_balance(uuid,text,bigint) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_adjust_wallet_balance(uuid,text,bigint) TO service_role;
