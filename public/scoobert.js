@@ -37,9 +37,20 @@ document.getElementById('void-return').addEventListener('click', () => {
   window.scrollTo({ top: 0, behavior: reduce.matches ? 'instant' : 'smooth' });
 });
 document.getElementById('void-fund').addEventListener('click', async () => {
+  const msg = document.getElementById('void-message');
+  // Votes belong to accounts, so a refresh can never reset them: the server allows one per account.
+  if (!window.razyMe?.signedIn) {
+    msg.textContent = 'he only hears named voices. pick a username first.';
+    window.razyOpenAccount?.(true);
+    return;
+  }
   const w = await window.razyWallet?.({ action: 'vote' });
-  if (w) window.razyShowWallet(w);
-  document.getElementById('void-message').textContent = 'your vote made it through. he remembers.';
+  if (w?.ok) msg.textContent = 'your vote made it through. he remembers.';
+  else if (w?.error === 'already_voted') msg.textContent = 'he already heard you. one voice each.';
+  else if (w?.error === 'sign_in_required') { msg.textContent = 'he lost your name. pick it again.'; window.razyOpenAccount?.(true); }
+  else msg.textContent = 'the signal broke. try again.';
+  const fresh = await window.razyWallet?.();
+  if (fresh) window.razyShowWallet(fresh);
 });
 function measure() {
   const start = section.offsetTop - innerHeight * .6;

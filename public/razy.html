@@ -306,6 +306,18 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
 .leaderboard .t{font-weight:800;color:#fff}
 .leaderboard li.you .n{color:#d9ccff}.leaderboard li.you .n::after{content:" (you)";color:#8b7bbf}
 @media(max-width:900px){.leaderboard{position:relative;width:auto;max-width:320px;margin:0 auto 24px}}
+
+.acct-btn{background:rgba(146,112,255,.14);border:1px solid #5b49a8;color:#e5dcff;border-radius:999px;padding:7px 14px;font:700 12px inherit;cursor:pointer;font-family:inherit}
+.acct-btn.on{cursor:default;border-color:#3f8f6a;color:#9df0c4;background:rgba(80,200,140,.1)}
+#acct-modal{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;background:rgba(5,4,10,.78);backdrop-filter:blur(6px)}
+#acct-modal.show{display:flex}
+#acct-modal .box{width:min(92vw,380px);background:#12101c;border:1px solid #3a2f66;border-radius:18px;padding:26px;color:#fff;box-shadow:0 20px 60px #000a}
+#acct-modal h3{margin:0 0 6px;font-size:20px}#acct-modal p{margin:0 0 14px;color:#a79ec9;font-size:13px;line-height:1.5}
+#acct-modal input{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #3a2f66;background:#1a1727;color:#fff;font:inherit;margin-bottom:8px}
+#acct-modal .go{width:100%;padding:12px;border:0;border-radius:10px;background:#805dff;color:#fff;font-weight:800;cursor:pointer}
+#acct-modal .go:disabled{opacity:.6;cursor:wait}#acct-modal .x{background:none;border:0;color:#a79ec9;margin-top:10px;width:100%;cursor:pointer}
+#acct-err{min-height:18px;color:#ffb36b;font-size:13px;margin-bottom:8px}
+.declined .mark{font-size:44px}
 </style>
 <link rel="stylesheet" href="/scoobert.css">
 </head>
@@ -314,6 +326,7 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
 <nav>
     <div class="logo">RAZY<span>TOKENS™</span></div>
     <div class="status">● SYSTEM ONLINE</div>
+    <button id="acct-btn" class="acct-btn" type="button">Create username</button>
 </nav>
 
 <main class="container">
@@ -434,6 +447,7 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
   <video id="timewarp-video" playsinline preload="auto" aria-label="Interrupted archive transmission"></video>
 </div>
 <div id="void-interference" aria-hidden="true"></div>
+<script src="/live-events.js"></script>
 <script type="module" src="/scoobert.js"></script>
 
 <!-- CHECKOUT -->
@@ -541,6 +555,14 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
             <button class="pay-button" onclick="finishOrder()">Return to dashboard</button>
         </div>
 
+        <!-- DECLINED -->
+        <div class="success declined" id="declined">
+            <div class="mark">⛔</div>
+            <h2>No payment was taken</h2>
+            <p id="declined-text">Payments aren't open yet, so nothing was charged and no tokens were added.</p>
+            <button class="pay-button" onclick="finishOrder()">Back to dashboard</button>
+        </div>
+
     </div>
 </div>
 
@@ -562,6 +584,7 @@ function openCheckout(plan,tokens,price){
     $('checkout-form').style.display='block';
     $('processing').classList.remove('active');
     $('success').classList.remove('active');
+    $('declined').classList.remove('active');
 
     document.querySelector('.checkout .pay-button').textContent='Pay €'+price+' · Place order';
 
@@ -639,14 +662,23 @@ function processPayment(){
     nextStep();
 }
 
+async function authHeaders(){try{const t=await parent.razyAccounts?.token?.();return t?{authorization:'Bearer '+t}:{}}catch{return {}}}
 async function wallet(body){
-    try{const r=await fetch('/api/public/wallet',body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body),credentials:'same-origin'}:{credentials:'same-origin'});return await r.json();}catch{return null}
+    try{
+        const h=await authHeaders();
+        const r=await fetch('/api/public/wallet',body?{method:'POST',headers:{'content-type':'application/json',...h},body:JSON.stringify(body),credentials:'same-origin'}:{headers:h,credentials:'same-origin'});
+        return await r.json().catch(()=>null);
+    }catch{return null}
 }
+window.razyMe={signedIn:false,username:null};
 function showWallet(w){
-    if(!w)return;
-    balance=w.balance;
+    if(!w||w.ok===false)return;
+    window.razyMe={signedIn:!!w.signedIn,username:w.username||null};
+    updateAccountChip();
+    if(w.events)window.razyLiveEvents?.render(w.events);
+    balance=Number(w.balance)||0;
     $('balance').textContent=balance.toLocaleString();
-    if(balance>0)$('balance-info').textContent='Razy has received new funding. Let him speak!';
+    if(balance>0)$('balance-info').textContent='Razy has received new funding. Let him speak!';else $('balance-info').textContent='Razy is currently waiting for funding.';
     const v=$('void-supporters');if(v&&w.globalVotes!=null)v.textContent=String(w.globalVotes).padStart(3,'0');
     const list=$('lb-list');
     if(list&&w.leaderboard){
@@ -655,27 +687,62 @@ function showWallet(w){
         for(const r of w.leaderboard){const li=document.createElement('li');if(r.you)li.className='you';const n=document.createElement('span');n.className='n';n.textContent=r.name;const t=document.createElement('span');t.className='t';t.textContent=r.tokens.toLocaleString()+' RT';li.append(n,t);list.append(li);}
     }
 }
+let pendingVote=false;
+function updateAccountChip(){
+    const b=$('acct-btn');const me=window.razyMe;
+    if(me.signedIn){b.textContent='@'+me.username;b.classList.add('on');}
+    else{b.textContent='Create username';b.classList.remove('on');}
+}
+function openAccount(then){
+    if(window.razyMe.signedIn)return;
+    pendingVote=!!then;$('acct-err').textContent='';
+    $('acct-modal').classList.add('show');$('acct-name').focus();
+}
+function closeAccount(){$('acct-modal').classList.remove('show');pendingVote=false;}
+async function createAccount(){
+    const go=$('acct-go');$('acct-err').textContent='';go.disabled=true;
+    const bridge=parent.razyAccounts;
+    const r=bridge?.createUsername?await bridge.createUsername($('acct-name').value):{error:'Accounts only work on the main site page.'};
+    go.disabled=false;
+    if(r.error){$('acct-err').textContent=r.error;return}
+    const vote=pendingVote;$('acct-modal').classList.remove('show');pendingVote=false;
+    showWallet(await wallet());
+    if(vote)$('void-fund').click();
+}
+$('acct-btn').onclick=()=>openAccount(false);
+$('acct-close').onclick=closeAccount;
+$('acct-go').onclick=createAccount;
+$('acct-name').addEventListener('keydown',e=>{if(e.key==='Enter')createAccount();if(e.key==='Escape')closeAccount();});
+window.razyOpenAccount=openAccount;
+// Real-time events: Supabase pushes a change, we re-fetch. The 8s poll below is the fallback.
+(function watch(tries){
+    const w=parent.razyAccounts?.watchEvents;
+    if(w){w(()=>wallet().then(showWallet));return}
+    if(tries>0)setTimeout(()=>watch(tries-1),500);
+})(20);
 window.razyWallet=wallet;window.razyShowWallet=showWallet;
 wallet().then(showWallet);
 setInterval(()=>{if(!document.hidden)wallet().then(showWallet)},8000);
 async function completeOrder(){
-    showWallet(await wallet({action:'buy',plan:selected.plan,name:$('card-name').value}));
-
-    $('balance').textContent=balance.toLocaleString();
-    $('balance-info').textContent='Razy has received new funding. Let him speak!';
-
+    const w=await wallet({action:'buy',plan:selected.plan,name:$('card-name').value});
     $('processing').classList.remove('active');
-    $('success').classList.add('active');
-
-    $('success-id').textContent='#'+orderID;
-    $('success-plan').textContent=selected.plan;
-    $('success-tokens').textContent=selected.tokens.toLocaleString()+' RT';
-    $('success-price').textContent='€'+selected.price;
+    if(w&&w.ok===true){
+        showWallet(await wallet());
+        $('success').classList.add('active');
+        $('success-id').textContent='#'+orderID;
+        $('success-plan').textContent=selected.plan;
+        $('success-tokens').textContent=selected.tokens.toLocaleString()+' RT';
+        $('success-price').textContent='€'+selected.price;
+    }else{
+        $('declined-text').textContent=(w&&w.message)||"Payments aren't open yet, so nothing was charged and no tokens were added.";
+        $('declined').classList.add('active');
+    }
 }
 
 function finishOrder(){
     closeCheckout();
     $('success').classList.remove('active');
+    $('declined').classList.remove('active');
     $('checkout-form').style.display='block';
     $('card-name').value='';
     $('expiry').value='';
@@ -686,6 +753,14 @@ function finishOrder(){
 }
 </script>
 
+<div id="acct-modal" role="dialog" aria-modal="true" aria-labelledby="acct-title"><div class="box">
+  <h3 id="acct-title">Pick a username</h3>
+  <p>That's all you need. Your name shows on the leaderboard and lets you cast one vote. It lives in this browser, so clearing site data loses it.</p>
+  <input id="acct-name" maxlength="20" placeholder="3–20 letters, numbers . _ -" autocomplete="off" spellcheck="false">
+  <div id="acct-err" role="alert"></div>
+  <button id="acct-go" class="go" type="button">Create account</button>
+  <button id="acct-close" class="x" type="button">Cancel</button>
+</div></div>
 <div id="grid-bg"></div><div id="cursor-glow"></div>
 <script>
 (()=>{

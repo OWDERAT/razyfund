@@ -5,6 +5,6 @@ if (!password || password.length < 12) {
   process.exit(1);
 }
 const salt = randomBytes(16);
-const hash = pbkdf2Sync(password, salt, 310000, 32, 'sha256');
+const hash = pbkdf2Sync(password, salt, 100000, 32, 'sha256');
 const encode = (b) => b.toString('base64url');
 console.log(`${encode(salt)}.${encode(hash)}`);

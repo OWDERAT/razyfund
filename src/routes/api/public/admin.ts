@@ -26,6 +26,7 @@ export const Route = createFileRoute('/api/public/admin')({ server: { handlers: 
   const body = parsed.data;
   try {
    if (body.action === 'login') {
+    if (!process.env['ADMIN_PASSWORD_HASH']) return store.response({ error: 'Admin login is not configured on the server.' }, 503);
     const { supabaseAdmin: db } = await import('@/integrations/supabase/client.server');
     // Only the edge-supplied client IP is trusted. Never use a client-controlled forwarded header.
     const ip = request.headers.get('cf-connecting-ip') ?? 'local-or-unknown';

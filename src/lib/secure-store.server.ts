@@ -26,13 +26,25 @@ export async function verifiedUser(request: Request) {
 }
 export async function sharedState() {
   const client = publicDb();
-  const [votes, board, events] = await Promise.all([
+  const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+  const now = new Date().toISOString();
+  const [votes, wallets, events] = await Promise.all([
     client.from('scoobert_votes').select('total').eq('id', 1).single(),
-    client.from('token_leaderboard').select('name,tokens').order('tokens', { ascending: false }).limit(5),
-    client.from('site_events').select('*').eq('active', true).lte('starts_at', new Date().toISOString()).gt('ends_at', new Date().toISOString()),
+    // Leaderboard = real wallet balances (the old token_leaderboard table is never written by accounts).
+    supabaseAdmin.from('wallet_accounts').select('player_id,balance').gt('balance', 0).order('balance', { ascending: false }).limit(5),
+    client.from('site_events').select('*').eq('active', true).lte('starts_at', now).gt('ends_at', now),
   ]);
-  if (votes.error || board.error || events.error) throw new Error('Shared state unavailable');
-  return { globalVotes: votes.data.total, leaderboard: board.data, events: events.data };
+  if (votes.error || wallets.error || events.error) throw new Error('Shared state unavailable');
+  const ids = wallets.data.map((w) => w.player_id);
+  const profiles = ids.length ? await supabaseAdmin.from('profiles').select('id,username').in('id', ids) : { data: [], error: null };
+  if (profiles.error) throw new Error('Shared state unavailable');
+  const names = new Map(profiles.data.map((p) => [p.id, p.username]));
+  const leaderboard = wallets.data.map((w) => ({ id: w.player_id, name: names.get(w.player_id) ?? 'Anonymous', tokens: Number(w.balance) }));
+  return { globalVotes: votes.data.total, leaderboard, events: events.data };
+}
+/** Strips internal player ids before sending the board to browsers; marks the viewer's own row. */
+export function publicBoard(board: { id: string; name: string; tokens: number }[], viewerId?: string) {
+  return board.map((row) => ({ name: row.name, tokens: row.tokens, you: viewerId !== undefined && row.id === viewerId }));
 }
 export function response(data: unknown, status = 200, cookie?: string) {
   const headers = new Headers({ 'content-type': 'application/json', 'cache-control': 'no-store' });
@@ -55,12 +67,8 @@ export async function digest(value: string) {
   return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
 }
 export async function passwordMatches(input: string) {
-  const expected = process.env['ADMIN_PASSWORD'];
-  if (!expected) return false;
-  const enc = new TextEncoder();
-  const key = await crypto.subtle.importKey('raw', enc.encode(process.env['WALLET_SECRET'] ?? ''), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
-  const signature = await crypto.subtle.sign('HMAC', key, enc.encode(expected));
-  return crypto.subtle.verify('HMAC', key, signature, enc.encode(input));
+  const { verifyAdminPassword } = await import('@/lib/admin-password');
+  return verifyAdminPassword(input, process.env['ADMIN_PASSWORD_HASH']);
 }
 export const ADMIN_COOKIE = 'razy_admin';
 export function adminToken(request: Request) {
