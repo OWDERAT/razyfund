@@ -1,4 +1,8 @@
 # Scoobert descent
+- [ ] Persist one Scoobert vote per browser wallet and reject forged purchases.
+- [ ] Add saved leaderboard username (recoverable sign-in awaits account choice).
+- [ ] Secure private administrator controls and persistent live events.
+- [ ] Verify voting, purchase rejection, names, and administrator event flow.
 - [x] Add hidden funding section and reversible scroll-driven distortion.
 - [x] Connect uploaded music with scroll-driven volume and sound control.
 - [x] Verify descent, return, funding action, and mobile layout.
