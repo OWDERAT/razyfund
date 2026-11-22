@@ -32,4 +32,7 @@ use the editor.
 - Keep the supplied standalone page inside the index iframe; pass bundled image and CDN audio URLs through its query parameters so assets resolve after publishing.
 - Keep the hidden descent's depth/volume calculations in a browser-safe standalone module with regression tests; scroll position is the sole reversible source of visual and audio intensity.
 - Keep the deeper encounter's timed phases in a browser-safe tested module; scrolling out cancels unfinished encounters, media ended events sequence the scream and video without overlap, and the completed blackout stays latched in memory until refresh.
-- Wallet (RT balance, Scoobert votes) lives only in an HMAC-signed httpOnly cookie issued by /api/public/wallet; the server alone applies fixed plan amounts and cooldowns so the browser can't edit values.
+- Account balances and one-vote claims live in server-authoritative tables; wallet APIs verify the user, reject browser purchase claims, and never migrate legacy client-requested credits, preventing refresh/replay inflation.
+- Username credentials use a deterministic normalized synthetic email with password authentication; admin renames change the display name, not the original login credential, so no email lookup or private address exposure is needed.
+- Admin access uses server-verified, rate-limited password checks and expiring httpOnly cookie sessions; encrypted password secrets stay server-only and the newly configured secret takes precedence over an older hash.
+- Standalone account bindings run after DOMContentLoaded and live subscriptions are disposed on page exit; this avoids missing form nodes and duplicate event subscriptions.

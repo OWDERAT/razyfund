@@ -691,38 +691,66 @@ let pendingVote=false;
 function updateAccountChip(){
     const b=$('acct-btn');const me=window.razyMe;
     if(me.signedIn){b.textContent='@'+me.username;b.classList.add('on');}
-    else{b.textContent='Create username';b.classList.remove('on');}
+    else{b.textContent='Create account / Sign in';b.classList.remove('on');}
 }
 function openAccount(then){
-    if(window.razyMe.signedIn)return;
     pendingVote=!!then;$('acct-err').textContent='';
-    $('acct-modal').classList.add('show');$('acct-name').focus();
+    $('acct-fields').hidden=window.razyMe.signedIn;
+    $('acct-signout').hidden=!window.razyMe.signedIn;
+    $('acct-title').textContent=window.razyMe.signedIn?'@'+window.razyMe.username:'Your Razy account';
+    $('acct-modal').classList.add('show');
+    (window.razyMe.signedIn?$('acct-signout'):$('acct-name')).focus();
 }
-function closeAccount(){$('acct-modal').classList.remove('show');pendingVote=false;}
-async function createAccount(){
-    const go=$('acct-go');$('acct-err').textContent='';go.disabled=true;
-    const bridge=parent.razyAccounts;
-    const r=bridge?.createUsername?await bridge.createUsername($('acct-name').value):{error:'Accounts only work on the main site page.'};
-    go.disabled=false;
-    if(r.error){$('acct-err').textContent=r.error;return}
+function closeAccount(){$('acct-modal').classList.remove('show');$('acct-password').value='';pendingVote=false;$('acct-btn').focus();}
+let accountBusy=false;
+async function createAccount(signin=false){
+    if(accountBusy)return;
+    accountBusy=true;$('acct-err').textContent='';$('acct-go').disabled=true;$('acct-signin').disabled=true;
+    let r;
+    try{
+      const bridge=parent.razyAccounts;
+      r=bridge?(signin?await bridge.signinUsername($('acct-name').value,$('acct-password').value):await bridge.createUsername($('acct-name').value,$('acct-password').value)):{error:'Accounts only work on the main site page.'};
+    }catch{r={error:'Account service unavailable. Try again.'};}
+    finally{accountBusy=false;$('acct-go').disabled=false;$('acct-signin').disabled=false;}
+    if(r.error){$('acct-err').textContent=r.error;return;}
     const vote=pendingVote;$('acct-modal').classList.remove('show');pendingVote=false;
+    $('acct-password').value='';
     showWallet(await wallet());
     if(vote)$('void-fund').click();
 }
-$('acct-btn').onclick=()=>openAccount(false);
-$('acct-close').onclick=closeAccount;
-$('acct-go').onclick=createAccount;
-$('acct-name').addEventListener('keydown',e=>{if(e.key==='Enter')createAccount();if(e.key==='Escape')closeAccount();});
 window.razyOpenAccount=openAccount;
-// Real-time events: Supabase pushes a change, we re-fetch. The 8s poll below is the fallback.
-(function watch(tries){
-    const w=parent.razyAccounts?.watchEvents;
-    if(w){w(()=>wallet().then(showWallet));return}
-    if(tries>0)setTimeout(()=>watch(tries-1),500);
-})(20);
 window.razyWallet=wallet;window.razyShowWallet=showWallet;
-wallet().then(showWallet);
-setInterval(()=>{if(!document.hidden)wallet().then(showWallet)},8000);
+// Bind after the account form below has been parsed.
+addEventListener('DOMContentLoaded',()=>{
+  $('acct-btn').onclick=()=>openAccount(false);
+  $('acct-close').onclick=closeAccount;
+  $('acct-go').onclick=()=>createAccount(false);
+  $('acct-signin').onclick=()=>createAccount(true);
+  $('acct-signout').onclick=async()=>{
+    try{const r=await parent.razyAccounts.signout();if(r.error){$('acct-err').textContent=r.error;return;}closeAccount();showWallet(await wallet());}
+    catch{$('acct-err').textContent='Could not sign out. Try again.';}
+  };
+  $('acct-modal').addEventListener('keydown',e=>{
+    if(e.key==='Escape')closeAccount();
+    if(e.key==='Tab'){
+      const controls=[...$('acct-modal').querySelectorAll('input,button')].filter(el=>!el.disabled&&el.getClientRects().length);
+      const first=controls[0],last=controls[controls.length-1];
+      if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}
+      else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}
+    }
+  });
+  const refresh=()=>wallet().then(showWallet);
+  parent.addEventListener('razy-account-change',refresh);
+  let dispose;let stopped=false;
+  (function watch(tries){
+    if(stopped)return;
+    const w=parent.razyAccounts?.watchEvents;
+    if(w){dispose=w(refresh);return;}
+    if(tries>0)setTimeout(()=>watch(tries-1),500);
+  })(20);
+  refresh();const poll=setInterval(()=>{if(!document.hidden)refresh();},8000);
+  addEventListener('pagehide',()=>{stopped=true;dispose?.();clearInterval(poll);parent.removeEventListener('razy-account-change',refresh);},{once:true});
+});
 async function completeOrder(){
     const w=await wallet({action:'buy',plan:selected.plan,name:$('card-name').value});
     $('processing').classList.remove('active');
@@ -754,11 +782,17 @@ function finishOrder(){
 </script>
 
 <div id="acct-modal" role="dialog" aria-modal="true" aria-labelledby="acct-title"><div class="box">
-  <h3 id="acct-title">Pick a username</h3>
-  <p>That's all you need. Your name shows on the leaderboard and lets you cast one vote. It lives in this browser, so clearing site data loses it.</p>
-  <input id="acct-name" maxlength="20" placeholder="3–20 letters, numbers . _ -" autocomplete="off" spellcheck="false">
-  <div id="acct-err" role="alert"></div>
+  <h3 id="acct-title">Your Razy account</h3>
+  <div id="acct-fields">
+  <label for="acct-name">Username</label>
+  <input id="acct-name" maxlength="20" placeholder="Username" autocomplete="username" spellcheck="false">
+  <label for="acct-password">Password</label>
+  <input id="acct-password" type="password" minlength="12" maxlength="256" placeholder="At least 12 characters" autocomplete="current-password">
   <button id="acct-go" class="go" type="button">Create account</button>
+  <button id="acct-signin" class="x" type="button">Sign in</button>
+  </div>
+  <div id="acct-err" role="alert"></div>
+  <button id="acct-signout" class="go" type="button" hidden>Sign out</button>
   <button id="acct-close" class="x" type="button">Cancel</button>
 </div></div>
 <div id="grid-bg"></div><div id="cursor-glow"></div>

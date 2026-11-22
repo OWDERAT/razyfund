@@ -67,7 +67,10 @@ export async function digest(value: string) {
   return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
 }
 export async function passwordMatches(input: string) {
-  const { verifyAdminPassword } = await import('@/lib/admin-password');
+  const { hashAdminPassword, verifyAdminPassword } = await import('@/lib/admin-password');
+  const password = process.env['ADMIN_PASSWORD'];
+  // The newly saved encrypted secret takes precedence over any previous hash.
+  if (password) return verifyAdminPassword(input, await hashAdminPassword(password));
   return verifyAdminPassword(input, process.env['ADMIN_PASSWORD_HASH']);
 }
 export const ADMIN_COOKIE = 'razy_admin';

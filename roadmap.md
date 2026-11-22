@@ -1,6 +1,6 @@
 # Scoobert descent
 - [ ] Verify one persistent Scoobert vote per account and reject forged purchases.
-- [ ] Replace unsafe anonymous username creation with secure account creation and sign-in.
+- [ ] Add username/password accounts without collecting email; no email-based password recovery.
 - [ ] Secure private administrator controls and persistent live events.
 - [ ] Verify voting, purchase rejection, names, and administrator event flow.
 - [x] Add hidden funding section and reversible scroll-driven distortion.

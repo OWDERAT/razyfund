@@ -22,6 +22,20 @@
       "when": 1795252882519,
       "tag": "0002_public_live_events_and_legacy_wallet_transfer",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795355062673,
+      "tag": "0003_harden_username_accounts",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795355139081,
+      "tag": "0004_realtime_account_updates",
+      "breakpoints": true
     }
   ]
 }
