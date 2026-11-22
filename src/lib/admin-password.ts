@@ -26,7 +26,11 @@ export async function verifyAdminPassword(input: string, stored: string | undefi
     const actual = await derive(input, fromB64(salt));
     if (expected.length !== actual.length) return false;
     let diff = 0;
-    for (let i = 0; i < actual.length; i++) diff |= actual[i]! ^ expected[i]!;
+    for (let i = 0; i < actual.length; i++) {
+      const a = actual[i]; const b = expected[i];
+      if (a === undefined || b === undefined) return false;
+      diff |= a ^ b;
+    }
     return diff === 0;
   } catch {
     return false;
