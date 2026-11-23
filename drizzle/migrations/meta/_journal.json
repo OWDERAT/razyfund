@@ -36,6 +36,27 @@
       "when": 1795355139081,
       "tag": "0004_realtime_account_updates",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795432407788,
+      "tag": "0005_browser_players_moderation_simulated_orders",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795432434242,
+      "tag": "0006_preserve_existing_players_for_moderation",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1795432453984,
+      "tag": "0007_moderated_player_leaderboard",
+      "breakpoints": true
     }
   ]
 }

@@ -7,15 +7,19 @@ export const Route = createFileRoute('/api/public/admin')({ server: { handlers: 
   try {
    if (!(await store.verifiedAdmin(request))) return store.response({ error: 'unauthorized' }, 401);
    const { supabaseAdmin: db } = await import('@/integrations/supabase/client.server');
-   const [wallets, profiles, events, audit] = await Promise.all([
+   const [wallets, profiles, players, events, audit] = await Promise.all([
     db.from('wallet_accounts').select('*').order('updated_at', { ascending: false }).limit(200),
     db.from('profiles').select('id,username').limit(200),
+    db.from('visitor_players').select('id,name,banned').order('created_at', { ascending: false }).limit(1000),
     db.from('site_events').select('*').order('created_at', { ascending: false }).limit(30),
     db.from('admin_audit_log').select('*').order('created_at', { ascending: false }).limit(30),
    ]);
-   if (wallets.error || profiles.error || events.error || audit.error) throw new Error('Load failed');
+   if (wallets.error || profiles.error || players.error || events.error || audit.error) throw new Error('Load failed');
    const names = new Map(profiles.data.map(p => [p.id, p.username]));
-   return store.response({ users: wallets.data.map(w => ({ ...w, user_profiles: { username: names.get(w.player_id) ?? 'Unknown' } })), events: events.data, audit: audit.data });
+    for (const p of players.data) names.set(p.id, p.name);
+    const banned = new Set(players.data.filter(p => p.banned).map(p => p.id));
+    const balances = new Map(wallets.data.map(w => [w.player_id, Number(w.balance)]));
+   return store.response({ moderation: players.data.filter(p => p.banned || (balances.get(p.id) ?? 0) > 0).map(p => ({ id: p.id, name: p.name, banned: p.banned })), users: wallets.data.map(w => ({ ...w, banned: banned.has(w.player_id), user_profiles: { username: names.get(w.player_id) ?? 'Unknown' } })), events: events.data, audit: audit.data });
   } catch { return store.response({ error: 'Service unavailable' }, 503); }
  },
  POST: async ({ request }) => {
@@ -47,11 +51,16 @@ export const Route = createFileRoute('/api/public/admin')({ server: { handlers: 
     if (token) { const result = await db.from('admin_sessions').delete().eq('token_hash', await store.digest(token)); if (result.error) throw new Error('Logout failed'); }
     return store.response({ ok: true }, 200, `${store.ADMIN_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`);
    }
-   if (body.action === 'adjust_tokens') {
+   if (body.action === 'ban_player' || body.action === 'unban_player') {
+     const result = await db.rpc('moderate_visitor', { p_player: body.player_id, p_banned: body.action === 'ban_player' });
+     if (result.error || !result.data) return store.response({ error: 'Player not found.' }, 404);
+    } else if (body.action === 'adjust_tokens') {
     const result = await db.rpc('admin_adjust_wallet_balance', { p_player: body.player_id, p_mode: body.mode, p_amount: body.amount });
     if (result.error) return store.response({ error: 'Could not update balance. Check the user ID.' }, 400);
    } else if (body.action === 'rename_user') {
-    const result = await db.from('profiles').update({ username: body.username }).eq('id', body.player_id).select('id').single();
+    const visitor = await db.from('visitor_players').select('id').eq('id', body.player_id).maybeSingle();
+     if (visitor.error) throw new Error('Player unavailable');
+     const result = visitor.data ? await db.from('visitor_players').update({ name: body.username }).eq('id', body.player_id).select('id').single() : await db.from('profiles').update({ username: body.username }).eq('id', body.player_id).select('id').single();
     if (result.error) return store.response({ error: 'Username unavailable or user not found.' }, 409);
     const audit = await db.from('admin_audit_log').insert({ action: 'rename_user', target_player: body.player_id, details: { username: body.username } });
     if (audit.error) throw new Error('Audit failed');

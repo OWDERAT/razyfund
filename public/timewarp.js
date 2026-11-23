@@ -34,7 +34,7 @@ export function setupTimewarp() {
   window.scrollTo({ top: 0, behavior: 'instant' });
 
   async function prime() {
-    if (priming || blackedOut) return;
+    if (window.razyBanned || priming || blackedOut) return;
     priming = true;
     await Promise.all([music, scream, video].map(async (media) => {
       // Prime every sound during the same ordinary page gesture, without sound buttons.
@@ -52,7 +52,7 @@ export function setupTimewarp() {
     resume();
   }
   function resume() {
-    if (document.hidden || priming || blackedOut) return;
+    if (window.razyBanned || document.hidden || priming || blackedOut) return;
     const media = phase === 'scare' ? scream : phase === 'video' ? video : active && phase === 'waiting' ? music : null;
     if (media?.paused) media.play().catch(() => {});
   }
@@ -91,7 +91,9 @@ export function setupTimewarp() {
   addEventListener('resize', measure);
   measure();
 
+  addEventListener('razy-player-banned',()=>{[music,scream,video].forEach(media=>media.pause());});
   function tick(time) {
+    if(window.razyBanned){lastTime=time;return {depth:0,hush:true};}
     if (blackedOut) return { depth, hush: true };
     const delta = lastTime === undefined ? 0 : Math.min((time - lastTime) / 1000, .1);
     lastTime = time;

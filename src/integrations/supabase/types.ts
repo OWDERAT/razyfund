@@ -191,6 +191,62 @@ export type Database = {
         }
         Relationships: []
       }
+      visitor_orders: {
+        Row: {
+          created_at: string
+          order_id: string
+          plan: string
+          player_id: string
+          tokens: number
+        }
+        Insert: {
+          created_at?: string
+          order_id: string
+          plan: string
+          player_id: string
+          tokens: number
+        }
+        Update: {
+          created_at?: string
+          order_id?: string
+          plan?: string
+          player_id?: string
+          tokens?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visitor_orders_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "visitor_players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visitor_players: {
+        Row: {
+          banned: boolean
+          created_at: string
+          id: string
+          name: string
+          token_hash: string
+        }
+        Insert: {
+          banned?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          token_hash: string
+        }
+        Update: {
+          banned?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          token_hash?: string
+        }
+        Relationships: []
+      }
       wallet_accounts: {
         Row: {
           balance: number
@@ -236,7 +292,29 @@ export type Database = {
         Returns: undefined
       }
       claim_scoobert_vote: { Args: { p_player: string }; Returns: boolean }
+      moderate_visitor: {
+        Args: { p_banned: boolean; p_player: string }
+        Returns: boolean
+      }
+      player_leaderboard: {
+        Args: never
+        Returns: {
+          id: string
+          name: string
+          tokens: number
+        }[]
+      }
       reserve_admin_login: { Args: { p_ip_hash: string }; Returns: boolean }
+      visitor_wallet_action: {
+        Args: {
+          p_action: string
+          p_name?: string
+          p_order?: string
+          p_plan?: string
+          p_player: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

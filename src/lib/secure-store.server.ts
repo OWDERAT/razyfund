@@ -30,16 +30,12 @@ export async function sharedState() {
   const now = new Date().toISOString();
   const [votes, wallets, events] = await Promise.all([
     client.from('scoobert_votes').select('total').eq('id', 1).single(),
-    // Leaderboard = real wallet balances (the old token_leaderboard table is never written by accounts).
-    supabaseAdmin.from('wallet_accounts').select('player_id,balance').gt('balance', 0).order('balance', { ascending: false }).limit(5),
+    // Moderated board includes named browser players, never private session identifiers.
+    supabaseAdmin.rpc('player_leaderboard'),
     client.from('site_events').select('*').eq('active', true).lte('starts_at', now).gt('ends_at', now),
   ]);
   if (votes.error || wallets.error || events.error) throw new Error('Shared state unavailable');
-  const ids = wallets.data.map((w) => w.player_id);
-  const profiles = ids.length ? await supabaseAdmin.from('profiles').select('id,username').in('id', ids) : { data: [], error: null };
-  if (profiles.error) throw new Error('Shared state unavailable');
-  const names = new Map(profiles.data.map((p) => [p.id, p.username]));
-  const leaderboard = wallets.data.map((w) => ({ id: w.player_id, name: names.get(w.player_id) ?? 'Anonymous', tokens: Number(w.balance) }));
+  const leaderboard = wallets.data.map(w => ({ id: w.id, name: w.name, tokens: Number(w.tokens) }));
   return { globalVotes: votes.data.total, leaderboard, events: events.data };
 }
 /** Strips internal player ids before sending the board to browsers; marks the viewer's own row. */

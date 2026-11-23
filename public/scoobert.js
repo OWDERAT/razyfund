@@ -20,7 +20,7 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 document.getElementById('void-image').src = new URLSearchParams(location.search).get('corridor') || '';
 
 async function unlock(gesture = false) {
-  if (unlocked || unlocking || (!gesture && performance.now() - lastAttempt < 1000)) return;
+  if (window.razyBanned || unlocked || unlocking || (!gesture && performance.now() - lastAttempt < 1000)) return;
   lastAttempt = performance.now();
   unlocking = true;
   try {
@@ -30,6 +30,7 @@ async function unlock(gesture = false) {
   } catch { /* Browsers may require the first ordinary page interaction. */ }
   finally { unlocking = false; }
 }
+addEventListener('razy-player-banned',()=>{audio.pause();audio.volume=0;});
 addEventListener('pointerdown', () => unlock(true), { passive: true });
 addEventListener('keydown', () => unlock(true));
 addEventListener('touchend', () => unlock(true), { passive: true });
@@ -38,16 +39,11 @@ document.getElementById('void-return').addEventListener('click', () => {
 });
 document.getElementById('void-fund').addEventListener('click', async () => {
   const msg = document.getElementById('void-message');
-  // Votes belong to accounts, so a refresh can never reset them: the server allows one per account.
-  if (!window.razyMe?.signedIn) {
-    msg.textContent = 'he only hears named voices. pick a username first.';
-    window.razyOpenAccount?.(true);
-    return;
-  }
+  // One persisted vote per server-recognized browser player.
   const w = await window.razyWallet?.({ action: 'vote' });
   if (w?.ok) msg.textContent = 'your vote made it through. he remembers.';
   else if (w?.error === 'already_voted') msg.textContent = 'he already heard you. one voice each.';
-  else if (w?.error === 'sign_in_required') { msg.textContent = 'he lost your name. pick it again.'; window.razyOpenAccount?.(true); }
+  else if (w?.error === 'banned') msg.textContent = 'access denied.';
   else msg.textContent = 'the signal broke. try again.';
   const fresh = await window.razyWallet?.();
   if (fresh) window.razyShowWallet(fresh);
@@ -67,6 +63,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) audio.pause();
 });
 function tick(time) {
+  if(window.razyBanned){audio.pause();audio.volume=0;lastTime=time;requestAnimationFrame(tick);return;}
   const delta = Math.min((time - lastTime) / 1000, .1);
   lastTime = time;
   const warp = timewarp.tick(time);

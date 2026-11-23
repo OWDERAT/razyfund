@@ -307,26 +307,20 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
 .leaderboard li.you .n{color:#d9ccff}.leaderboard li.you .n::after{content:" (you)";color:#8b7bbf}
 @media(max-width:900px){.leaderboard{position:relative;width:auto;max-width:320px;margin:0 auto 24px}}
 
-.acct-btn{background:rgba(146,112,255,.14);border:1px solid #5b49a8;color:#e5dcff;border-radius:999px;padding:7px 14px;font:700 12px inherit;cursor:pointer;font-family:inherit}
-.acct-btn.on{cursor:default;border-color:#3f8f6a;color:#9df0c4;background:rgba(80,200,140,.1)}
-#acct-modal{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;background:rgba(5,4,10,.78);backdrop-filter:blur(6px)}
-#acct-modal.show{display:flex}
-#acct-modal .box{width:min(92vw,380px);background:#12101c;border:1px solid #3a2f66;border-radius:18px;padding:26px;color:#fff;box-shadow:0 20px 60px #000a}
-#acct-modal h3{margin:0 0 6px;font-size:20px}#acct-modal p{margin:0 0 14px;color:#a79ec9;font-size:13px;line-height:1.5}
-#acct-modal input{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #3a2f66;background:#1a1727;color:#fff;font:inherit;margin-bottom:8px}
-#acct-modal .go{width:100%;padding:12px;border:0;border-radius:10px;background:#805dff;color:#fff;font-weight:800;cursor:pointer}
-#acct-modal .go:disabled{opacity:.6;cursor:wait}#acct-modal .x{background:none;border:0;color:#a79ec9;margin-top:10px;width:100%;cursor:pointer}
-#acct-err{min-height:18px;color:#ffb36b;font-size:13px;margin-bottom:8px}
+body.player-pending > :not(#player-gate):not(script),body.player-banned > :not(#player-gate):not(script){visibility:hidden!important;pointer-events:none!important}
+body.player-banned{overflow:hidden;transform:none!important}
+#player-gate{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;text-align:center;background:var(--bg);color:var(--white);padding:24px}
+#player-gate[hidden]{display:none}#player-gate p{color:var(--muted);margin-top:12px;line-height:1.6}
 .declined .mark{font-size:44px}
 </style>
 <link rel="stylesheet" href="/scoobert.css">
 </head>
-<body>
+<body class="player-pending">
+<div id="player-gate" role="status"><div><h2 id="gate-title">Connecting…</h2><p id="gate-text">Loading your tokens.</p></div></div>
 
 <nav>
     <div class="logo">RAZY<span>TOKENS™</span></div>
     <div class="status">● SYSTEM ONLINE</div>
-    <button id="acct-btn" class="acct-btn" type="button">Create username</button>
 </nav>
 
 <main class="container">
@@ -478,7 +472,7 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
             </div>
 
             <label class="field-label">CARDHOLDER NAME</label>
-            <input class="field" id="card-name" placeholder="John Doe" maxlength="40">
+            <input class="field" id="card-name" placeholder="Your leaderboard name" maxlength="20" autocomplete="off">
 
             <div class="demo-card">
                 <div class="card-top">
@@ -517,10 +511,10 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
             <input class="field" id="email" type="email" placeholder="you@example.com">
 
             <button class="pay-button" onclick="processPayment()">
-                Pay €7.99 · Place order
+                Add tokens · Place order
             </button>
 
-            <div class="secure">🔒 SECURE CHECKOUT · 256-BIT ENCRYPTED</div>
+            <div class="secure">NO CHARGE · USE FICTIONAL CARD DETAILS</div>
             
         </div>
 
@@ -539,15 +533,15 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
         <!-- SUCCESS -->
         <div class="success" id="success">
             <div class="checkmark">✓</div>
-            <h2>Payment successful!</h2>
+            <h2>Tokens added!</h2>
             <p>Your order has been successfully placed.<br>Razy can now afford to talk.</p>
 
             <div class="receipt">
                 <div><span>Order ID</span><strong id="success-id">#RAZY-000000</strong></div>
                 <div><span>Subscription</span><strong id="success-plan">Professional</strong></div>
-                <div><span>Tokens purchased</span><strong id="success-tokens">2,500 RT</strong></div>
+                <div><span>Tokens added</span><strong id="success-tokens">2,500 RT</strong></div>
                 <div><span>Amount</span><strong id="success-price">€7.99</strong></div>
-                <div><span>Payment status</span><strong style="color:#72e7a1">SUCCESSFUL</strong></div>
+                <div><span>Payment status</span><strong style="color:#72e7a1">NOT CHARGED</strong></div>
                 <div><span>Order status</span><strong style="color:#72e7a1">PLACED</strong></div>
             </div>
 
@@ -558,7 +552,7 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
         <!-- DECLINED -->
         <div class="success declined" id="declined">
             <div class="mark">⛔</div>
-            <h2>No payment was taken</h2>
+            <h2>Order not completed</h2>
             <p id="declined-text">Payments aren't open yet, so nothing was charged and no tokens were added.</p>
             <button class="pay-button" onclick="finishOrder()">Back to dashboard</button>
         </div>
@@ -570,11 +564,17 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
 let balance = 0;
 let selected = {};
 let orderID = '';
+let checkoutBusy=false;
+let orderName='';
+let lastPlayerName='';
 
 const $ = id => document.getElementById(id);
 
 function openCheckout(plan,tokens,price){
+    if(checkoutBusy||window.razyBanned)return;
     selected={plan,tokens,price};
+    $('card-name').value=lastPlayerName==='Anonymous'?'':lastPlayerName;
+    $('preview-name').textContent=$('card-name').value.toUpperCase()||'YOUR NAME';
 
     $('order-plan').textContent=plan+' Plan';
     $('order-tokens').textContent=tokens.toLocaleString()+' RT';
@@ -586,7 +586,7 @@ function openCheckout(plan,tokens,price){
     $('success').classList.remove('active');
     $('declined').classList.remove('active');
 
-    document.querySelector('.checkout .pay-button').textContent='Pay €'+price+' · Place order';
+    document.querySelector('.checkout .pay-button').textContent='Add '+tokens.toLocaleString()+' RT · Place order';
 
     $('overlay').classList.add('show');
 }
@@ -612,26 +612,15 @@ $('expiry').addEventListener('input',e=>{
 
 function processPayment(){
     const name=$('card-name').value.trim();
-    const number=$('card-number').value.trim();
-    const expiry=$('expiry').value.trim();
-    const cvv=$('cvv').value.trim();
-    const email=$('email').value.trim();
-
-    if(!name||!number||!expiry||!cvv||!email){
-        alert('Please fill in all fields.');
-        return;
-    }
-
-    if(!email.includes('@')){
-        alert('Please enter a valid-looking email address.');
-        return;
-    }
-
+    if(checkoutBusy||window.razyBanned)return;
+    if(!/^[\p{L}\p{N} ._-]{1,20}$/u.test(name)){alert('Enter a name of 1–20 letters, numbers, spaces, dots, dashes or underscores.');return;}
+    checkoutBusy=true;
+    orderName=name;
     // Discard the dummy input. No payment credentials are processed or saved.
     $('card-number').value='';
     $('cvv').value='';
 
-    orderID='RAZY-'+Math.random().toString(36).substring(2,9).toUpperCase();
+    orderID=crypto.randomUUID();
 
     $('checkout-form').style.display='none';
     $('processing').classList.add('active');
@@ -640,8 +629,8 @@ function processPayment(){
     $('processing-plan').textContent=selected.plan;
 
     const messages=[
-        ['Processing payment...','Contacting your bank.'],
-        ['Verifying order...','Confirming your subscription details.'],
+        ['Preparing your order…','Reserving your token pack.'],
+        ['Checking your name…','Updating your leaderboard entry.'],
         ['Allocating tokens...','Preparing tokens for Razy.'],
         ['Finalizing purchase...','Almost there. Razy is getting excited.']
     ];
@@ -662,19 +651,34 @@ function processPayment(){
     nextStep();
 }
 
-async function authHeaders(){try{const t=await parent.razyAccounts?.token?.();return t?{authorization:'Bearer '+t}:{}}catch{return {}}}
+let walletReady;
 async function wallet(body){
     try{
-        const h=await authHeaders();
-        const r=await fetch('/api/public/wallet',body?{method:'POST',headers:{'content-type':'application/json',...h},body:JSON.stringify(body),credentials:'same-origin'}:{headers:h,credentials:'same-origin'});
-        return await r.json().catch(()=>null);
+        if(body&&walletReady)await walletReady;
+        const r=await fetch('/api/public/wallet',body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body),credentials:'same-origin'}:{credentials:'same-origin',cache:'no-store'});
+        const w=await r.json().catch(()=>null);
+        if(w?.error==='banned')setPlayerBan(true);
+        return w;
     }catch{return null}
 }
-window.razyMe={signedIn:false,username:null};
+function setPlayerBan(banned){
+    window.razyBanned=banned;
+    document.body.classList.toggle('player-banned',banned);
+    document.body.classList.remove('player-pending');
+    $('player-gate').hidden=!banned;
+    if(banned){
+      $('gate-title').textContent='Access denied';
+      $('gate-text').textContent='This player has been banned. Contact the site owner.';
+      window.razyLiveEvents?.render([]);
+      dispatchEvent(new Event('razy-player-banned'));
+      for(const child of document.body.children)if(child.id!=='player-gate')child.inert=true;
+    }else{for(const child of document.body.children)child.inert=false;}
+}
 function showWallet(w){
     if(!w||w.ok===false)return;
-    window.razyMe={signedIn:!!w.signedIn,username:w.username||null};
-    updateAccountChip();
+    if(window.razyBanned)setPlayerBan(false);
+    document.body.classList.remove('player-pending');$('player-gate').hidden=true;
+    lastPlayerName=w.name||'';
     if(w.events)window.razyLiveEvents?.render(w.events);
     balance=Number(w.balance)||0;
     $('balance').textContent=balance.toLocaleString();
@@ -687,72 +691,23 @@ function showWallet(w){
         for(const r of w.leaderboard){const li=document.createElement('li');if(r.you)li.className='you';const n=document.createElement('span');n.className='n';n.textContent=r.name;const t=document.createElement('span');t.className='t';t.textContent=r.tokens.toLocaleString()+' RT';li.append(n,t);list.append(li);}
     }
 }
-let pendingVote=false;
-function updateAccountChip(){
-    const b=$('acct-btn');const me=window.razyMe;
-    if(me.signedIn){b.textContent='@'+me.username;b.classList.add('on');}
-    else{b.textContent='Create account / Sign in';b.classList.remove('on');}
-}
-function openAccount(then){
-    pendingVote=!!then;$('acct-err').textContent='';
-    $('acct-fields').hidden=window.razyMe.signedIn;
-    $('acct-signout').hidden=!window.razyMe.signedIn;
-    $('acct-title').textContent=window.razyMe.signedIn?'@'+window.razyMe.username:'Your Razy account';
-    $('acct-modal').classList.add('show');
-    (window.razyMe.signedIn?$('acct-signout'):$('acct-name')).focus();
-}
-function closeAccount(){$('acct-modal').classList.remove('show');$('acct-password').value='';pendingVote=false;$('acct-btn').focus();}
-let accountBusy=false;
-async function createAccount(signin=false){
-    if(accountBusy)return;
-    accountBusy=true;$('acct-err').textContent='';$('acct-go').disabled=true;$('acct-signin').disabled=true;
-    let r;
-    try{
-      const bridge=parent.razyAccounts;
-      r=bridge?(signin?await bridge.signinUsername($('acct-name').value,$('acct-password').value):await bridge.createUsername($('acct-name').value,$('acct-password').value)):{error:'Accounts only work on the main site page.'};
-    }catch{r={error:'Account service unavailable. Try again.'};}
-    finally{accountBusy=false;$('acct-go').disabled=false;$('acct-signin').disabled=false;}
-    if(r.error){$('acct-err').textContent=r.error;return;}
-    const vote=pendingVote;$('acct-modal').classList.remove('show');pendingVote=false;
-    $('acct-password').value='';
-    showWallet(await wallet());
-    if(vote)$('void-fund').click();
-}
-window.razyOpenAccount=openAccount;
 window.razyWallet=wallet;window.razyShowWallet=showWallet;
-// Bind after the account form below has been parsed.
 addEventListener('DOMContentLoaded',()=>{
-  $('acct-btn').onclick=()=>openAccount(false);
-  $('acct-close').onclick=closeAccount;
-  $('acct-go').onclick=()=>createAccount(false);
-  $('acct-signin').onclick=()=>createAccount(true);
-  $('acct-signout').onclick=async()=>{
-    try{const r=await parent.razyAccounts.signout();if(r.error){$('acct-err').textContent=r.error;return;}closeAccount();showWallet(await wallet());}
-    catch{$('acct-err').textContent='Could not sign out. Try again.';}
-  };
-  $('acct-modal').addEventListener('keydown',e=>{
-    if(e.key==='Escape')closeAccount();
-    if(e.key==='Tab'){
-      const controls=[...$('acct-modal').querySelectorAll('input,button')].filter(el=>!el.disabled&&el.getClientRects().length);
-      const first=controls[0],last=controls[controls.length-1];
-      if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}
-      else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}
+  const refresh=async()=>{
+    const w=await wallet();showWallet(w);
+    if(!w||w.error==='service_unavailable'){
+      if(document.body.classList.contains('player-pending')){
+        $('gate-title').textContent='Connection interrupted';$('gate-text').textContent='Retrying your token connection…';
+      }
     }
-  });
-  const refresh=()=>wallet().then(showWallet);
-  parent.addEventListener('razy-account-change',refresh);
-  let dispose;let stopped=false;
-  (function watch(tries){
-    if(stopped)return;
-    const w=parent.razyAccounts?.watchEvents;
-    if(w){dispose=w(refresh);return;}
-    if(tries>0)setTimeout(()=>watch(tries-1),500);
-  })(20);
-  refresh();const poll=setInterval(()=>{if(!document.hidden)refresh();},8000);
-  addEventListener('pagehide',()=>{stopped=true;dispose?.();clearInterval(poll);parent.removeEventListener('razy-account-change',refresh);},{once:true});
+  };
+  walletReady=refresh();
+  const poll=setInterval(()=>{if(!document.hidden)refresh();},3000);
+  addEventListener('pagehide',()=>clearInterval(poll),{once:true});
 });
 async function completeOrder(){
-    const w=await wallet({action:'buy',plan:selected.plan,name:$('card-name').value});
+    const w=await wallet({action:'buy',plan:selected.plan,name:orderName,order_id:orderID});
+    checkoutBusy=false;
     $('processing').classList.remove('active');
     if(w&&w.ok===true){
         showWallet(await wallet());
@@ -760,9 +715,9 @@ async function completeOrder(){
         $('success-id').textContent='#'+orderID;
         $('success-plan').textContent=selected.plan;
         $('success-tokens').textContent=selected.tokens.toLocaleString()+' RT';
-        $('success-price').textContent='€'+selected.price;
+        $('success-price').textContent='€0.00 charged';
     }else{
-        $('declined-text').textContent=(w&&w.message)||"Payments aren't open yet, so nothing was charged and no tokens were added.";
+        $('declined-text').textContent=(w&&w.message)||'Could not save your order. Please try again.';
         $('declined').classList.add('active');
     }
 }
@@ -781,20 +736,6 @@ function finishOrder(){
 }
 </script>
 
-<div id="acct-modal" role="dialog" aria-modal="true" aria-labelledby="acct-title"><div class="box">
-  <h3 id="acct-title">Your Razy account</h3>
-  <div id="acct-fields">
-  <label for="acct-name">Username</label>
-  <input id="acct-name" maxlength="20" placeholder="Username" autocomplete="username" spellcheck="false">
-  <label for="acct-password">Password</label>
-  <input id="acct-password" type="password" minlength="12" maxlength="256" placeholder="At least 12 characters" autocomplete="current-password">
-  <button id="acct-go" class="go" type="button">Create account</button>
-  <button id="acct-signin" class="x" type="button">Sign in</button>
-  </div>
-  <div id="acct-err" role="alert"></div>
-  <button id="acct-signout" class="go" type="button" hidden>Sign out</button>
-  <button id="acct-close" class="x" type="button">Cancel</button>
-</div></div>
 <div id="grid-bg"></div><div id="cursor-glow"></div>
 <script>
 (()=>{

@@ -1,6 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from 'react';
-import { accountBridge } from '@/lib/account-bridge';
 import corridor from '@/assets/scoobert-corridor.jpg';
 import music from '@/assets/still-life.mp3.asset.json';
 import timewarpMusic from '@/assets/timewarp-still-life.mp3.asset.json';
@@ -23,10 +21,6 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  useEffect(() => {
-    window.razyAccounts = accountBridge;
-    return () => { delete window.razyAccounts; };
-  }, []);
   const params = new URLSearchParams({ corridor, music: music.url, timewarpMusic: timewarpMusic.url, scream: scream.url, dog: dog.url, transmission: transmission.url });
   return <iframe src={`/razy.html?${params}`} allow="autoplay" title="Razy Tokens" className="fixed inset-0 h-screen w-screen border-0" />;
 }
