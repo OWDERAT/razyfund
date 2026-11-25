@@ -14,17 +14,42 @@ let primed = false;
 
 const GESTURES = ['pointerdown', 'mousedown', 'touchstart', 'touchend', 'click', 'keydown'];
 
+const FADE_MS = 1200;
+let fadeTimer = null;
+
+function fadeTo(target, ms = FADE_MS, done) {
+  clearInterval(fadeTimer);
+  const from = audio.volume;
+  const start = performance.now();
+  fadeTimer = setInterval(() => {
+    const t = Math.min(1, (performance.now() - start) / ms);
+    audio.volume = Math.max(0, Math.min(1, from + (target - from) * t));
+    if (t >= 1) {
+      clearInterval(fadeTimer);
+      if (done) done();
+    }
+  }, 40);
+}
+
+function fadeOutAndPause() {
+  fadeTo(0, FADE_MS, () => {
+    if (!inSection) audio.pause();
+  });
+}
+
 function isPlaying() {
   return !audio.paused && !audio.ended;
 }
 
 async function playCelebration() {
-  if (window.razyBanned || isPlaying()) return;
+  if (window.razyBanned) return;
+  if (isPlaying()) { fadeTo(1); return; }
   if (audio.ended) audio.currentTime = 0;
   audio.muted = false;
-  audio.volume = 1;
+  audio.volume = 0;
   try {
     await audio.play();
+    fadeTo(1);
     waitingForGesture = false;
     status.textContent = 'NOW PLAYING: F R O Z E N';
   } catch {
@@ -53,6 +78,7 @@ new IntersectionObserver((entries) => {
   for (const entry of entries) {
     inSection = entry.isIntersecting;
     if (inSection) playCelebration();
+    else if (isPlaying()) fadeOutAndPause();
   }
 }, { threshold: 0.35 }).observe(section);
 
@@ -67,6 +93,7 @@ audio.addEventListener('canplaythrough', () => {
 }, { once: true });
 
 addEventListener('razy-player-banned', () => {
+  clearInterval(fadeTimer);
   audio.pause();
   audio.volume = 0;
 });
