@@ -105,29 +105,8 @@
   font-size: 16px;
   line-height: 1.7;
 }
-.celebration-replay {
-  min-height: 48px;
-  padding: 0 22px;
-  border: 1px solid #ffe28a;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #ffe28a, #ffb7d9);
-  color: #261735;
-  font: 900 11px/1 monospace;
-  letter-spacing: 1.4px;
-  cursor: pointer;
-  box-shadow: 0 8px 35px #ffcb7c30;
-  transition: transform .2s ease, box-shadow .2s ease;
-}
-.celebration-replay:hover {
-  transform: translateY(-3px) scale(1.025);
-  box-shadow: 0 12px 42px #ffcb7c55;
-}
-.celebration-replay:focus-visible {
-  outline: 3px solid #fff;
-  outline-offset: 5px;
-}
 .celebration-audio-status {
-  margin: 16px 0 0;
+  margin: 28px 0 0;
   color: #c7b9e7;
   font: 9px/1.5 monospace;
   letter-spacing: 2px;
@@ -207,5 +186,4 @@
   .celebration-crown,
   .celebration-confetti,
   .celebration-content {animation: none;}
-  .celebration-replay {transition: none;}
-}
+  

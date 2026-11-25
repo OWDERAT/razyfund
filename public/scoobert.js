@@ -1,94 +1,70 @@
 const section = document.getElementById('scoobert-celebration');
 const audio = document.getElementById('celebration-audio');
-const replay = document.getElementById('celebration-replay');
 const status = document.getElementById('celebration-audio-status');
 const params = new URLSearchParams(location.search);
 
 audio.src = params.get('frozen') || '/frozen-celebration.mp3';
 audio.preload = 'auto';
+audio.loop = false;
+audio.load();
 
-let started = false;
-let attempted = false;
+let inSection = false;
+let waitingForGesture = false;
+let primed = false;
 
-async function playCelebration(restart = false) {
-  if (window.razyBanned) return;
-  if (restart) audio.currentTime = 0;
-  try {
-    await audio.play();
-    started = true;
-  } catch {
-    status.textContent = 'TAP PLAY F R O Z E N AGAIN IF YOUR BROWSER BLOCKED AUTOPLAY';
-  }
+const GESTURES = ['pointerdown', 'mousedown', 'touchstart', 'touchend', 'click', 'keydown'];
+
+function isPlaying() {
+  return !audio.paused && !audio.ended;
 }
 
-async function unlock(gesture = false) {
-  if (window.razyBanned || unlocked || unlocking || (!gesture && performance.now() - lastAttempt < 1000)) return;
-  lastAttempt = performance.now();
-  unlocking = true;
+async function playCelebration() {
+  if (window.razyBanned || isPlaying()) return;
+  if (audio.ended) audio.currentTime = 0;
+  audio.muted = false;
+  audio.volume = 1;
   try {
     await audio.play();
-    started = true;
-    attempted = true;
+    waitingForGesture = false;
     status.textContent = 'NOW PLAYING: F R O Z E N';
   } catch {
-    attempted = true;
-    status.textContent = 'TAP PLAY F R O Z E N AGAIN IF YOUR BROWSER BLOCKED AUTOPLAY';
+    // Autoplay blocked by the browser: start on the very next tap / click / key press.
+    waitingForGesture = true;
+    status.textContent = 'TAP ANYWHERE TO START F R O Z E N';
   }
 }
 
-
-function sectionIsVisible() {
-  const rect = section.getBoundingClientRect();
-  return rect.top < innerHeight * .8 && rect.bottom > innerHeight * .2;
+function onGesture() {
+  if (inSection || waitingForGesture) {
+    playCelebration();
+  } else if (!primed) {
+    // Unlock the audio element early so it can autoplay later when the section is reached.
+    primed = true;
+    audio.muted = true;
+    audio.play().then(() => {
+      if (!inSection) { audio.pause(); audio.currentTime = 0; }
+      audio.muted = false;
+    }).catch(() => { audio.muted = false; primed = false; });
+  }
 }
-addEventListener('razy-player-banned',()=>{audio.pause();audio.volume=0;});
-addEventListener('pointerdown', () => unlock(true), { passive: true });
-addEventListener('keydown', () => unlock(true));
-addEventListener('touchend', () => unlock(true), { passive: true });
-document.getElementById('void-return').addEventListener('click', () => {
-  window.scrollTo({ top: 0, behavior: reduce.matches ? 'instant' : 'smooth' });
-});
-document.getElementById('void-fund').addEventListener('click', async () => {
-  const msg = document.getElementById('void-message');
-  // One persisted vote per server-recognized browser player.
-  const w = await window.razyWallet?.({ action: 'vote' });
-  if (w?.ok) msg.textContent = 'your vote made it through. he remembers.';
-  else if (w?.error === 'already_voted') msg.textContent = 'he already heard you. one voice each.';
-  else if (w?.error === 'banned') msg.textContent = 'access denied.';
-  else msg.textContent = 'the signal broke. try again.';
-  const fresh = await window.razyWallet?.();
-  if (fresh) window.razyShowWallet(fresh);
-});
-function measure() {
-  const start = section.offsetTop - innerHeight * .6;
-  depth = descentDepth(scrollY, start, section.offsetHeight - innerHeight * .4);
-  root.style.setProperty('--void-depth', depth.toFixed(4));
-  document.body.classList.toggle('void-corrupted', depth > .08);
-  document.getElementById('void-level').textContent = String(Math.round(depth * 999)).padStart(3, '0');
-  document.getElementById('void-status').textContent = depth > .75 ? 'SIGNAL LOST' : depth > .35 ? 'SIGNAL DECAY' : 'UNLISTED CHANNEL';
-  document.getElementById('void-presence').textContent = depth > .8 ? 'HE IS STILL HERE' : depth > .4 ? 'NO EXIT FOUND' : 'YOU WERE NOT SUPPOSED TO FIND THIS';
-}
+for (const type of GESTURES) addEventListener(type, onGesture, { passive: true });
 
-function checkScroll() {
-  if (!started && !attempted && sectionIsVisible()) playCelebration();
-}
-
-replay.addEventListener('click', () => playCelebration(true));
-addEventListener('scroll', checkScroll, { passive: true });
-addEventListener('resize', checkScroll);
-
-for (const event of ['pointerdown', 'keydown', 'touchend']) {
-  addEventListener(event, () => {
-    if (!started && sectionIsVisible()) playCelebration();
-  }, { passive: true });
-}
+new IntersectionObserver((entries) => {
+  for (const entry of entries) {
+    inSection = entry.isIntersecting;
+    if (inSection) playCelebration();
+  }
+}, { threshold: 0.35 }).observe(section);
 
 audio.addEventListener('ended', () => {
   status.textContent = 'F R O Z E N • CELEBRATION COMPLETE';
 });
 audio.addEventListener('error', () => {
-  status.textContent = 'SOUNDTRACK COULD NOT LOAD — USE THE REPLAY BUTTON TO TRY AGAIN';
+  status.textContent = 'SOUNDTRACK COULD NOT LOAD — REFRESH THE PAGE';
 });
+audio.addEventListener('canplaythrough', () => {
+  if (inSection && !isPlaying() && !audio.ended) playCelebration();
+}, { once: true });
 
 addEventListener('razy-player-banned', () => {
   audio.pause();
@@ -97,9 +73,5 @@ addEventListener('razy-player-banned', () => {
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) audio.pause();
+  else if (inSection && !audio.ended) playCelebration();
 });
-
-
-checkScroll();
-measure();
-requestAnimationFrame(tick);

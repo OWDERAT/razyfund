@@ -410,7 +410,6 @@ body.player-banned{overflow:hidden;transform:none!important}
     <p class="celebration-subtitle">THE MAIN MOD ERA HAS BEGUN</p>
     <div class="celebration-divider" aria-hidden="true"><span>✦</span><span>✦</span><span>✦</span></div>
     <p class="celebration-message">One promotion. One legend. An entire celebration.</p>
-    <button id="celebration-replay" class="celebration-replay" type="button">↻ PLAY F R O Z E N AGAIN</button>
     <p id="celebration-audio-status" class="celebration-audio-status" aria-live="polite">F R O Z E N • CELEBRATION SOUNDTRACK</p>
   </div>
   <div class="celebration-footer" aria-hidden="true">
@@ -419,7 +418,6 @@ body.player-banned{overflow:hidden;transform:none!important}
   </div>
   <audio id="celebration-audio" preload="auto"></audio>
 </section>
-<div id="void-interference" aria-hidden="true"></div>
 <script src="/live-events.js"></script>
 <script type="module" src="/scoobert.js"></script>
 
@@ -662,8 +660,6 @@ function showWallet(w){
     balance=Number(w.balance)||0;
     $('balance').textContent=balance.toLocaleString();
     if(balance>0)$('balance-info').textContent='Razy has received new funding. Let him speak!';else $('balance-info').textContent='Razy is currently waiting for funding.';
-
-    const v=$('void-supporters');if(v&&w.globalVotes!=null)v.textContent=String(w.globalVotes).padStart(3,'0');
     const list=$('lb-list');
     if(list&&w.leaderboard){
         list.replaceChildren();
