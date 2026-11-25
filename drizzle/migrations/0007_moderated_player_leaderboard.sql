@@ -1,0 +1,3 @@
+CREATE OR REPLACE FUNCTION public.player_leaderboard() RETURNS TABLE(id uuid,name text,tokens bigint) LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public AS $$ SELECT v.id,v.name,w.balance AS tokens FROM public.visitor_players v JOIN public.wallet_accounts w ON w.player_id=v.id WHERE NOT v.banned AND w.balance>0 ORDER BY w.balance DESC,v.created_at ASC LIMIT 5 $$;
+REVOKE ALL ON FUNCTION public.player_leaderboard() FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.player_leaderboard() TO service_role;

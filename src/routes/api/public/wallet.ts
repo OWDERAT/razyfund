@@ -1,63 +1,36 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { applyAction, cleanName, openWallet, PLAN_TOKENS, sealWallet, type Wallet } from '@/lib/wallet';
+import { visitorActionSchema, visitorAccess } from '@/lib/visitor-rules';
 
-const COOKIE = 'razy_wallet';
-const readCookie = (req: Request) =>
-  (req.headers.get('cookie') ?? '').split(/;\s*/).find((c) => c.startsWith(COOKIE + '='))?.slice(COOKIE.length + 1);
-
-async function db() {
-  return (await import('@/integrations/supabase/client.server')).supabaseAdmin;
-}
-
-async function shared() {
-  const admin = await db();
-  const [votes, board] = await Promise.all([
-    admin.from('scoobert_votes').select('total').eq('id', 1).maybeSingle(),
-    admin.from('token_leaderboard').select('player_id,name,tokens').order('tokens', { ascending: false }).limit(5),
-  ]);
-  return { globalVotes: Number(votes.data?.total ?? 0), board: board.data ?? [] };
-}
-
-async function respond(w: Wallet, ok: boolean, secret: string) {
-  const sealed = await sealWallet(w, secret);
-  const { globalVotes, board } = await shared();
-  const leaderboard = board.map((r) => ({ name: r.name, tokens: Number(r.tokens), you: r.player_id === w.id }));
-  return new Response(JSON.stringify({ ok, balance: w.balance, votes: w.votes, globalVotes, leaderboard }), {
-    headers: {
-      'content-type': 'application/json',
-      'cache-control': 'no-store',
-      'set-cookie': `${COOKIE}=${sealed}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=31536000`,
-    },
-  });
-}
-
-export const Route = createFileRoute('/api/public/wallet')({
-  server: {
-    handlers: {
-      GET: async ({ request }) => {
-        const secret = process.env['WALLET_SECRET']!;
-        return respond(await openWallet(readCookie(request), secret), true, secret);
-      },
-      POST: async ({ request }) => {
-        const secret = process.env['WALLET_SECRET']!;
-        // Only same-origin pages may change the wallet.
-        const origin = request.headers.get('origin');
-        if (origin && origin !== new URL(request.url).origin) return new Response('forbidden', { status: 403 });
-        const body = (await request.json().catch(() => ({}))) as { action?: unknown; plan?: unknown; name?: unknown };
-        const current = await openWallet(readCookie(request), secret);
-        const { wallet, ok } = applyAction(current, body.action, body.plan, Date.now());
-        if (ok) {
-          const admin = await db();
-          if (body.action === 'vote') await admin.rpc('add_scoobert_vote');
-          if (body.action === 'buy')
-            await admin.rpc('add_leaderboard_tokens', {
-              p_player: wallet.id,
-              p_name: cleanName(body.name),
-              p_tokens: PLAN_TOKENS[body.plan as string] ?? 0,
-            });
-        }
-        return respond(wallet, ok, secret);
-      },
-    },
+export const Route = createFileRoute('/api/public/wallet')({ server: { handlers: {
+  GET: async ({ request }) => {
+    const store = await import('@/lib/secure-store.server');
+    const { visitor } = await import('@/lib/visitor-store.server');
+    try {
+      const session = await visitor(request);
+      if (!visitorAccess(session.player.banned)) return store.response({ ok: false, error: 'banned' }, 403, session.cookie);
+      const [shared, wallet] = await Promise.all([
+        store.sharedState(),
+        session.db.from('wallet_accounts').select('balance,votes').eq('player_id', session.player.id).single(),
+      ]);
+      if (wallet.error) throw new Error('Wallet unavailable');
+      return store.response({ ok: true, name: session.player.name, ...wallet.data, globalVotes: shared.globalVotes, events: shared.events, leaderboard: store.publicBoard(shared.leaderboard, session.player.id) }, 200, session.cookie);
+    } catch { return store.response({ ok: false, error: 'service_unavailable', message: 'Could not load your tokens. Please try again.' }, 503); }
   },
-});
+  POST: async ({ request }) => {
+    const store = await import('@/lib/secure-store.server');
+    if (!store.sameOrigin(request)) return store.response({ ok: false, error: 'forbidden' }, 403);
+    const parsed = visitorActionSchema.safeParse(await store.boundedBody(request));
+    if (!parsed.success) return store.response({ ok: false, error: 'invalid_request', message: 'Use a name of 1–20 letters, numbers, spaces, dots, dashes or underscores.' }, 400);
+    const { visitor } = await import('@/lib/visitor-store.server');
+    try {
+      const session = await visitor(request);
+      if (!visitorAccess(session.player.banned)) return store.response({ ok: false, error: 'banned' }, 403, session.cookie);
+      const action = parsed.data;
+      const result = await session.db.rpc('visitor_wallet_action', { p_player: session.player.id, p_action: action.action, ...(action.action === 'buy' ? { p_plan: action.plan, p_name: action.name, p_order: action.order_id } : {}) });
+      if (result.error) throw new Error('Action failed');
+      const data = result.data as { ok: boolean; error?: string; tokens?: number; replayed?: boolean };
+      const message = data.error === 'name_taken' ? 'That name is already in use. Choose another cardholder name.' : data.error === 'banned' ? 'This player has been banned.' : 'Could not complete the order. Please try again.';
+      return store.response({ ...data, ...(data.ok ? {} : { message }) }, data.ok ? 200 : data.error === 'banned' ? 403 : 409, session.cookie);
+    } catch { return store.response({ ok: false, error: 'service_unavailable', message: 'Could not save your tokens. Please try again.' }, 503); }
+  },
+} } });

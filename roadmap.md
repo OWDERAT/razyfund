@@ -1,9 +1,6 @@
-# Scoobert descent
-- [x] Add hidden funding section and reversible scroll-driven distortion.
-- [x] Connect uploaded music with scroll-driven volume and sound control.
-- [x] Verify descent, return, funding action, and mobile layout.
-- [x] Remove sound buttons and verify automatic playback with browser autoplay restrictions respected.
-- [x] Add deeper time-warp category and crossfade uploaded Still Life track.
-- [x] Add ten-second quiet transition, dog/scream jumpscare, and video with audio.
-- [x] Test sequence timing, cancellation, media playback, and mobile layout.
-- [x] Keep the screen black and silent after static until refresh; verify scrolling and Escape cannot restore it.
+# Checkout and moderation
+- [ ] Replace member sign-in with persistent browser players named from checkout.
+- [ ] Complete simulated pack orders with fixed server amounts and replay protection.
+- [ ] Add administrator name-based ban/unban dropdowns and enforce bans on wallet actions.
+- [ ] Verify checkout, name changes, refresh persistence, votes, and ban/unban.
+- [ ] Await choice on custom flood protection; hosting controls are not configurable here.

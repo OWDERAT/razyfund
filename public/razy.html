@@ -306,10 +306,17 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
 .leaderboard .t{font-weight:800;color:#fff}
 .leaderboard li.you .n{color:#d9ccff}.leaderboard li.you .n::after{content:" (you)";color:#8b7bbf}
 @media(max-width:900px){.leaderboard{position:relative;width:auto;max-width:320px;margin:0 auto 24px}}
+
+body.player-pending > :not(#player-gate):not(script),body.player-banned > :not(#player-gate):not(script){visibility:hidden!important;pointer-events:none!important}
+body.player-banned{overflow:hidden;transform:none!important}
+#player-gate{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;text-align:center;background:var(--bg);color:var(--white);padding:24px}
+#player-gate[hidden]{display:none}#player-gate p{color:var(--muted);margin-top:12px;line-height:1.6}
+.declined .mark{font-size:44px}
 </style>
 <link rel="stylesheet" href="/scoobert.css">
 </head>
-<body>
+<body class="player-pending">
+<div id="player-gate" role="status"><div><h2 id="gate-title">Connecting…</h2><p id="gate-text">Loading your tokens.</p></div></div>
 
 <nav>
     <div class="logo">RAZY<span>TOKENS™</span></div>
@@ -389,51 +396,30 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
 
 <footer>© 2026 <strong>Razy Tokens™</strong> — Making Razy Speak Since 2026.<br><br>Powered by questionable financial decisions.</footer>
 
-<div class="void-approach" aria-hidden="true"><span>↓</span></div>
-<section id="scoobert" class="scoobert" aria-labelledby="scoobert-title">
-  <div class="void-room">
-    <img id="void-image" class="void-image" alt="An empty fluorescent-lit hallway stretching into the distance" loading="lazy" width="1536" height="1024">
-    <div class="void-shade"></div>
-    <div class="void-hud"><span>RAZY ARCHIVE / <b>LEVEL <span id="void-level">000</span></b></span><span id="void-status">UNLISTED CHANNEL</span></div>
-    <div class="void-content">
-      <div class="void-label">[ HIDDEN CATEGORY / 004 ]</div>
-      <h2 id="scoobert-title">Fund Scoobert<span>so he gets main mod</span></h2>
-      <p class="void-whisper" id="void-message">he's been waiting down here.</p>
-      <div class="void-fund">
-        <div><small>VOICES IN HIS FAVOR</small><strong id="void-supporters" aria-live="polite">000</strong></div>
-        <button id="void-fund" class="buy void-button">Back Scoobert ↗</button>
-      </div>
-    </div>
-    <div class="void-tear" aria-hidden="true"></div>
-    <div class="void-bottom">
-      <div><span id="void-presence">YOU WERE NOT SUPPOSED TO FIND THIS</span><div class="void-signal"><i></i></div></div>
-      <div class="void-tools">
-        <button id="void-return" class="void-tool" aria-label="Return to surface" title="Return to surface"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 7-7 7 7M12 5v15"/></svg></button>
-      </div>
-    </div>
-  </div>
-</section>
-<section id="timewarp" class="timewarp" aria-labelledby="timewarp-title" data-phase="idle">
-  <div class="warp-room">
-    <img id="timewarp-image" class="warp-image" alt="The same abandoned hallway, years too late" loading="lazy" width="1536" height="1024">
-    <div class="warp-fog" aria-hidden="true"></div>
-    <div class="warp-hud"><span>ARCHIVE / <b>LEVEL ∅</b></span><span id="timewarp-status">TIME COORDINATES INVALID</span></div>
-    <div class="warp-content">
-      <p class="warp-label">[ HIDDEN CATEGORY / 005 — STILL HERE ]</p>
-      <div class="warp-year" id="timewarp-year" aria-hidden="true">????</div>
-      <h2 id="timewarp-title"><span>You traveled</span><em>too fast.</em></h2>
-      <p class="warp-story">Scoobert never got his main mod.<br><strong>He's been waiting for you here.</strong></p>
-      <p class="warp-echo" aria-hidden="true">you promised you would come back.</p>
-    </div>
-    <div class="warp-bottom"><span>LAST SEEN: BEFORE YOU LEFT<br><b>ELAPSED TIME: UNDEFINED</b></span><button id="timewarp-return" class="void-tool" aria-label="Return to surface" title="Return to surface"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 7-7 7 7M12 5v15"/></svg></button></div>
-    <div class="warp-rip" aria-hidden="true"></div>
-  </div>
-</section>
-<div id="timewarp-screen" class="warp-screen" data-phase="idle" hidden>
-  <img id="timewarp-dog" alt="Scoobert suddenly appears" width="447" height="447">
-  <video id="timewarp-video" playsinline preload="auto" aria-label="Interrupted archive transmission"></video>
+<div class="celebration-approach" aria-hidden="true">
+  <span>↓ KEEP SCROLLING ↓</span>
 </div>
-<div id="void-interference" aria-hidden="true"></div>
+<section id="scoobert-celebration" class="scoobert-celebration" aria-labelledby="celebration-title">
+  <div class="celebration-confetti" aria-hidden="true"></div>
+  <div class="celebration-glow celebration-glow-one" aria-hidden="true"></div>
+  <div class="celebration-glow celebration-glow-two" aria-hidden="true"></div>
+  <div class="celebration-content">
+    <p class="celebration-eyebrow">★ A VERY IMPORTANT ANNOUNCEMENT ★</p>
+    <div class="celebration-crown" aria-hidden="true">♛</div>
+    <h2 id="celebration-title">Celebrate with scoobert for getting main mod</h2>
+    <p class="celebration-subtitle">THE MAIN MOD ERA HAS BEGUN</p>
+    <div class="celebration-divider" aria-hidden="true"><span>✦</span><span>✦</span><span>✦</span></div>
+    <p class="celebration-message">One promotion. One legend. An entire celebration.</p>
+    <button id="celebration-replay" class="celebration-replay" type="button">↻ PLAY F R O Z E N AGAIN</button>
+    <p id="celebration-audio-status" class="celebration-audio-status" aria-live="polite">F R O Z E N • CELEBRATION SOUNDTRACK</p>
+  </div>
+  <div class="celebration-footer" aria-hidden="true">
+    <span>CONGRATULATIONS, SCOOBERT</span>
+    <span>★ MAIN MOD ★</span>
+  </div>
+  <audio id="celebration-audio" preload="auto"></audio>
+</section>
+<script src="/live-events.js"></script>
 <script type="module" src="/scoobert.js"></script>
 
 <!-- CHECKOUT -->
@@ -464,7 +450,7 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
             </div>
 
             <label class="field-label">CARDHOLDER NAME</label>
-            <input class="field" id="card-name" placeholder="John Doe" maxlength="40">
+            <input class="field" id="card-name" placeholder="Your leaderboard name" maxlength="20" autocomplete="off">
 
             <div class="demo-card">
                 <div class="card-top">
@@ -503,10 +489,10 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
             <input class="field" id="email" type="email" placeholder="you@example.com">
 
             <button class="pay-button" onclick="processPayment()">
-                Pay €7.99 · Place order
+                Add tokens · Place order
             </button>
 
-            <div class="secure">🔒 SECURE CHECKOUT · 256-BIT ENCRYPTED</div>
+            <div class="secure">NO CHARGE · USE FICTIONAL CARD DETAILS</div>
             
         </div>
 
@@ -525,20 +511,28 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
         <!-- SUCCESS -->
         <div class="success" id="success">
             <div class="checkmark">✓</div>
-            <h2>Payment successful!</h2>
+            <h2>Tokens added!</h2>
             <p>Your order has been successfully placed.<br>Razy can now afford to talk.</p>
 
             <div class="receipt">
                 <div><span>Order ID</span><strong id="success-id">#RAZY-000000</strong></div>
                 <div><span>Subscription</span><strong id="success-plan">Professional</strong></div>
-                <div><span>Tokens purchased</span><strong id="success-tokens">2,500 RT</strong></div>
+                <div><span>Tokens added</span><strong id="success-tokens">2,500 RT</strong></div>
                 <div><span>Amount</span><strong id="success-price">€7.99</strong></div>
-                <div><span>Payment status</span><strong style="color:#72e7a1">SUCCESSFUL</strong></div>
+                <div><span>Payment status</span><strong style="color:#72e7a1">NOT CHARGED</strong></div>
                 <div><span>Order status</span><strong style="color:#72e7a1">PLACED</strong></div>
             </div>
 
             <p style="color:#a78aff;font-weight:800;margin-bottom:20px">⚡ TOKENS SUCCESSFULLY CREDITED!</p>
             <button class="pay-button" onclick="finishOrder()">Return to dashboard</button>
+        </div>
+
+        <!-- DECLINED -->
+        <div class="success declined" id="declined">
+            <div class="mark">⛔</div>
+            <h2>Order not completed</h2>
+            <p id="declined-text">Payments aren't open yet, so nothing was charged and no tokens were added.</p>
+            <button class="pay-button" onclick="finishOrder()">Back to dashboard</button>
         </div>
 
     </div>
@@ -548,11 +542,17 @@ h1 .word{display:inline-block;opacity:0;transform:translateY(60%) rotateX(-60deg
 let balance = 0;
 let selected = {};
 let orderID = '';
+let checkoutBusy=false;
+let orderName='';
+let lastPlayerName='';
 
 const $ = id => document.getElementById(id);
 
 function openCheckout(plan,tokens,price){
+    if(checkoutBusy||window.razyBanned)return;
     selected={plan,tokens,price};
+    $('card-name').value=lastPlayerName==='Anonymous'?'':lastPlayerName;
+    $('preview-name').textContent=$('card-name').value.toUpperCase()||'YOUR NAME';
 
     $('order-plan').textContent=plan+' Plan';
     $('order-tokens').textContent=tokens.toLocaleString()+' RT';
@@ -562,8 +562,9 @@ function openCheckout(plan,tokens,price){
     $('checkout-form').style.display='block';
     $('processing').classList.remove('active');
     $('success').classList.remove('active');
+    $('declined').classList.remove('active');
 
-    document.querySelector('.checkout .pay-button').textContent='Pay €'+price+' · Place order';
+    document.querySelector('.checkout .pay-button').textContent='Add '+tokens.toLocaleString()+' RT · Place order';
 
     $('overlay').classList.add('show');
 }
@@ -589,26 +590,15 @@ $('expiry').addEventListener('input',e=>{
 
 function processPayment(){
     const name=$('card-name').value.trim();
-    const number=$('card-number').value.trim();
-    const expiry=$('expiry').value.trim();
-    const cvv=$('cvv').value.trim();
-    const email=$('email').value.trim();
-
-    if(!name||!number||!expiry||!cvv||!email){
-        alert('Please fill in all fields.');
-        return;
-    }
-
-    if(!email.includes('@')){
-        alert('Please enter a valid-looking email address.');
-        return;
-    }
-
+    if(checkoutBusy||window.razyBanned)return;
+    if(!/^[\p{L}\p{N} ._-]{1,20}$/u.test(name)){alert('Enter a name of 1–20 letters, numbers, spaces, dots, dashes or underscores.');return;}
+    checkoutBusy=true;
+    orderName=name;
     // Discard the dummy input. No payment credentials are processed or saved.
     $('card-number').value='';
     $('cvv').value='';
 
-    orderID='RAZY-'+Math.random().toString(36).substring(2,9).toUpperCase();
+    orderID=crypto.randomUUID();
 
     $('checkout-form').style.display='none';
     $('processing').classList.add('active');
@@ -617,8 +607,8 @@ function processPayment(){
     $('processing-plan').textContent=selected.plan;
 
     const messages=[
-        ['Processing payment...','Contacting your bank.'],
-        ['Verifying order...','Confirming your subscription details.'],
+        ['Preparing your order…','Reserving your token pack.'],
+        ['Checking your name…','Updating your leaderboard entry.'],
         ['Allocating tokens...','Preparing tokens for Razy.'],
         ['Finalizing purchase...','Almost there. Razy is getting excited.']
     ];
@@ -639,15 +629,38 @@ function processPayment(){
     nextStep();
 }
 
+let walletReady;
 async function wallet(body){
-    try{const r=await fetch('/api/public/wallet',body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body),credentials:'same-origin'}:{credentials:'same-origin'});return await r.json();}catch{return null}
+    try{
+        if(body&&walletReady)await walletReady;
+        const r=await fetch('/api/public/wallet',body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body),credentials:'same-origin'}:{credentials:'same-origin',cache:'no-store'});
+        const w=await r.json().catch(()=>null);
+        if(w?.error==='banned')setPlayerBan(true);
+        return w;
+    }catch{return null}
+}
+function setPlayerBan(banned){
+    window.razyBanned=banned;
+    document.body.classList.toggle('player-banned',banned);
+    document.body.classList.remove('player-pending');
+    $('player-gate').hidden=!banned;
+    if(banned){
+      $('gate-title').textContent='Access denied';
+      $('gate-text').textContent='This player has been banned. Contact the site owner.';
+      window.razyLiveEvents?.render([]);
+      dispatchEvent(new Event('razy-player-banned'));
+      for(const child of document.body.children)if(child.id!=='player-gate')child.inert=true;
+    }else{for(const child of document.body.children)child.inert=false;}
 }
 function showWallet(w){
-    if(!w)return;
-    balance=w.balance;
+    if(!w||w.ok===false)return;
+    if(window.razyBanned)setPlayerBan(false);
+    document.body.classList.remove('player-pending');$('player-gate').hidden=true;
+    lastPlayerName=w.name||'';
+    if(w.events)window.razyLiveEvents?.render(w.events);
+    balance=Number(w.balance)||0;
     $('balance').textContent=balance.toLocaleString();
-    if(balance>0)$('balance-info').textContent='Razy has received new funding. Let him speak!';
-    const v=$('void-supporters');if(v&&w.globalVotes!=null)v.textContent=String(w.globalVotes).padStart(3,'0');
+    if(balance>0)$('balance-info').textContent='Razy has received new funding. Let him speak!';else $('balance-info').textContent='Razy is currently waiting for funding.';
     const list=$('lb-list');
     if(list&&w.leaderboard){
         list.replaceChildren();
@@ -656,26 +669,40 @@ function showWallet(w){
     }
 }
 window.razyWallet=wallet;window.razyShowWallet=showWallet;
-wallet().then(showWallet);
-setInterval(()=>{if(!document.hidden)wallet().then(showWallet)},8000);
+addEventListener('DOMContentLoaded',()=>{
+  const refresh=async()=>{
+    const w=await wallet();showWallet(w);
+    if(!w||w.error==='service_unavailable'){
+      if(document.body.classList.contains('player-pending')){
+        $('gate-title').textContent='Connection interrupted';$('gate-text').textContent='Retrying your token connection…';
+      }
+    }
+  };
+  walletReady=refresh();
+  const poll=setInterval(()=>{if(!document.hidden)refresh();},3000);
+  addEventListener('pagehide',()=>clearInterval(poll),{once:true});
+});
 async function completeOrder(){
-    showWallet(await wallet({action:'buy',plan:selected.plan,name:$('card-name').value}));
-
-    $('balance').textContent=balance.toLocaleString();
-    $('balance-info').textContent='Razy has received new funding. Let him speak!';
-
+    const w=await wallet({action:'buy',plan:selected.plan,name:orderName,order_id:orderID});
+    checkoutBusy=false;
     $('processing').classList.remove('active');
-    $('success').classList.add('active');
-
-    $('success-id').textContent='#'+orderID;
-    $('success-plan').textContent=selected.plan;
-    $('success-tokens').textContent=selected.tokens.toLocaleString()+' RT';
-    $('success-price').textContent='€'+selected.price;
+    if(w&&w.ok===true){
+        showWallet(await wallet());
+        $('success').classList.add('active');
+        $('success-id').textContent='#'+orderID;
+        $('success-plan').textContent=selected.plan;
+        $('success-tokens').textContent=selected.tokens.toLocaleString()+' RT';
+        $('success-price').textContent='€0.00 charged';
+    }else{
+        $('declined-text').textContent=(w&&w.message)||'Could not save your order. Please try again.';
+        $('declined').classList.add('active');
+    }
 }
 
 function finishOrder(){
     closeCheckout();
     $('success').classList.remove('active');
+    $('declined').classList.remove('active');
     $('checkout-form').style.display='block';
     $('card-name').value='';
     $('expiry').value='';

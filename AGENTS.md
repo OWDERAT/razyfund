@@ -32,4 +32,8 @@ use the editor.
 - Keep the supplied standalone page inside the index iframe; pass bundled image and CDN audio URLs through its query parameters so assets resolve after publishing.
 - Keep the hidden descent's depth/volume calculations in a browser-safe standalone module with regression tests; scroll position is the sole reversible source of visual and audio intensity.
 - Keep the deeper encounter's timed phases in a browser-safe tested module; scrolling out cancels unfinished encounters, media ended events sequence the scream and video without overlap, and the completed blackout stays latched in memory until refresh.
-- Wallet (RT balance, Scoobert votes) lives only in an HMAC-signed httpOnly cookie issued by /api/public/wallet; the server alone applies fixed plan amounts and cooldowns so the browser can't edit values.
+- Player balances, one-vote claims and bans live in server-authoritative tables; browser identity uses an opaque httpOnly cookie whose hash is stored privately, not an editable name or balance.
+- Checkout awards simulated, non-monetary tokens using fixed server pack amounts and per-player order identifiers for replay protection; browser orders never constitute proof of payment.
+- Cardholder names label browser players without member sign-in; bans follow the stable player ID across renames, remain until administrator unban, and cannot identify a person after cookie deletion.
+- Admin access uses server-verified, rate-limited password checks and expiring httpOnly cookie sessions; encrypted password secrets stay server-only and the newly configured secret takes precedence over an older hash.
+- Standalone player bindings run after DOMContentLoaded, initialize identity before writes, and dispose polling on page exit; this avoids missing nodes and concurrent cookie creation.

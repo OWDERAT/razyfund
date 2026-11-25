@@ -1,0 +1,2 @@
+INSERT INTO public.visitor_players(id,token_hash,name)
+SELECT w.player_id,'legacy:' || w.player_id::text,coalesce(p.username,'Anonymous') FROM public.wallet_accounts w LEFT JOIN public.profiles p ON p.id=w.player_id WHERE NOT EXISTS(SELECT 1 FROM public.visitor_players v WHERE v.id=w.player_id) ON CONFLICT DO NOTHING;

@@ -14,6 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json
+          id: number
+          target_player: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json
+          id?: never
+          target_player?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json
+          id?: never
+          target_player?: string | null
+        }
+        Relationships: []
+      }
+      admin_login_limits: {
+        Row: {
+          attempts: number
+          ip_hash: string
+          window_start: string
+        }
+        Insert: {
+          attempts?: number
+          ip_hash: string
+          window_start?: string
+        }
+        Update: {
+          attempts?: number
+          ip_hash?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
+      admin_sessions: {
+        Row: {
+          expires_at: string
+          token_hash: string
+        }
+        Insert: {
+          expires_at: string
+          token_hash: string
+        }
+        Update: {
+          expires_at?: string
+          token_hash?: string
+        }
+        Relationships: []
+      }
+      legacy_wallet_claims: {
+        Row: {
+          account_id: string
+          legacy_id: string
+        }
+        Insert: {
+          account_id: string
+          legacy_id: string
+        }
+        Update: {
+          account_id?: string
+          legacy_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          id: string
+          username: string
+        }
+        Insert: {
+          id: string
+          username: string
+        }
+        Update: {
+          id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      scoobert_vote_claims: {
+        Row: {
+          claimed_at: string
+          player_id: string
+        }
+        Insert: {
+          claimed_at?: string
+          player_id: string
+        }
+        Update: {
+          claimed_at?: string
+          player_id?: string
+        }
+        Relationships: []
+      }
       scoobert_votes: {
         Row: {
           id: number
@@ -26,6 +128,45 @@ export type Database = {
         Update: {
           id?: number
           total?: number
+        }
+        Relationships: []
+      }
+      site_events: {
+        Row: {
+          active: boolean
+          created_at: string
+          ends_at: string
+          event_type: string
+          id: string
+          image_url: string | null
+          payload: Json
+          sound_url: string | null
+          starts_at: string
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          ends_at: string
+          event_type: string
+          id?: string
+          image_url?: string | null
+          payload?: Json
+          sound_url?: string | null
+          starts_at?: string
+          title?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          ends_at?: string
+          event_type?: string
+          id?: string
+          image_url?: string | null
+          payload?: Json
+          sound_url?: string | null
+          starts_at?: string
+          title?: string
         }
         Relationships: []
       }
@@ -50,6 +191,83 @@ export type Database = {
         }
         Relationships: []
       }
+      visitor_orders: {
+        Row: {
+          created_at: string
+          order_id: string
+          plan: string
+          player_id: string
+          tokens: number
+        }
+        Insert: {
+          created_at?: string
+          order_id: string
+          plan: string
+          player_id: string
+          tokens: number
+        }
+        Update: {
+          created_at?: string
+          order_id?: string
+          plan?: string
+          player_id?: string
+          tokens?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visitor_orders_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "visitor_players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visitor_players: {
+        Row: {
+          banned: boolean
+          created_at: string
+          id: string
+          name: string
+          token_hash: string
+        }
+        Insert: {
+          banned?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          token_hash: string
+        }
+        Update: {
+          banned?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          token_hash?: string
+        }
+        Relationships: []
+      }
+      wallet_accounts: {
+        Row: {
+          balance: number
+          player_id: string
+          updated_at: string
+          votes: number
+        }
+        Insert: {
+          balance?: number
+          player_id: string
+          updated_at?: string
+          votes?: number
+        }
+        Update: {
+          balance?: number
+          player_id?: string
+          updated_at?: string
+          votes?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -60,6 +278,43 @@ export type Database = {
         Returns: undefined
       }
       add_scoobert_vote: { Args: never; Returns: number }
+      admin_adjust_wallet_balance: {
+        Args: { p_amount: number; p_mode: string; p_player: string }
+        Returns: number
+      }
+      attach_legacy_wallet: {
+        Args: {
+          p_balance: number
+          p_legacy: string
+          p_user: string
+          p_voted: boolean
+        }
+        Returns: undefined
+      }
+      claim_scoobert_vote: { Args: { p_player: string }; Returns: boolean }
+      moderate_visitor: {
+        Args: { p_banned: boolean; p_player: string }
+        Returns: boolean
+      }
+      player_leaderboard: {
+        Args: never
+        Returns: {
+          id: string
+          name: string
+          tokens: number
+        }[]
+      }
+      reserve_admin_login: { Args: { p_ip_hash: string }; Returns: boolean }
+      visitor_wallet_action: {
+        Args: {
+          p_action: string
+          p_name?: string
+          p_order?: string
+          p_plan?: string
+          p_player: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
