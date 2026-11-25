@@ -419,6 +419,7 @@ body.player-banned{overflow:hidden;transform:none!important}
   </div>
   <audio id="celebration-audio" preload="auto"></audio>
 </section>
+<div id="void-interference" aria-hidden="true"></div>
 <script src="/live-events.js"></script>
 <script type="module" src="/scoobert.js"></script>
 
@@ -661,6 +662,8 @@ function showWallet(w){
     balance=Number(w.balance)||0;
     $('balance').textContent=balance.toLocaleString();
     if(balance>0)$('balance-info').textContent='Razy has received new funding. Let him speak!';else $('balance-info').textContent='Razy is currently waiting for funding.';
+
+    const v=$('void-supporters');if(v&&w.globalVotes!=null)v.textContent=String(w.globalVotes).padStart(3,'0');
     const list=$('lb-list');
     if(list&&w.leaderboard){
         list.replaceChildren();
