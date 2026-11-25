@@ -13,31 +13,71 @@ let waitingForGesture = false;
 let primed = false;
 
 // ---- Image rain (skull + santa discord) while inside the section ----
+// Driven by JS (requestAnimationFrame) because razy.html disables all CSS animations and
+// transitions for visitors with "reduce motion" turned on, which made the rain sit still.
 const RAIN_IMAGES = ['/rain-skull.png', '/rain-discord.png'];
-const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const rain = document.createElement('div');
 rain.className = 'celebration-rain';
 rain.setAttribute('aria-hidden', 'true');
 section.prepend(rain);
 
+const rnd = (a, b) => a + Math.random() * (b - a);
+let drops = [];
+let rainOpacity = 0;
+let rainTarget = 0;
+let rainRaf = 0;
+let lastFrame = 0;
+
 function buildRain() {
   rain.replaceChildren();
-  rain.style.setProperty('--rain-h', section.offsetHeight + 'px');
-  const count = reduceMotion ? 6 : 26;
-  const rnd = (a, b) => a + Math.random() * (b - a);
-  for (let i = 0; i < count; i++) {
+  const w = section.clientWidth;
+  const h = section.offsetHeight;
+  drops = [];
+  for (let i = 0; i < 26; i++) {
     const img = document.createElement('img');
     img.src = RAIN_IMAGES[i % RAIN_IMAGES.length];
     img.alt = '';
     img.draggable = false;
-    img.style.left = rnd(0, 94) + '%';
-    img.style.width = rnd(38, 96) + 'px';
-    img.style.animationDuration = rnd(5, 10) + 's';
-    img.style.animationDelay = -rnd(0, 10) + 's';
-    img.style.setProperty('--rain-spin', rnd(-540, 540) + 'deg');
+    const size = rnd(40, 100);
+    img.style.width = size + 'px';
     rain.append(img);
+    drops.push({
+      el: img, size,
+      x: rnd(0, Math.max(1, w - size)),
+      y: rnd(-size, h),
+      speed: rnd(110, 260),
+      rot: rnd(0, 360),
+      spin: rnd(-90, 90),
+    });
   }
 }
+
+function rainFrame(now) {
+  const dt = Math.min(0.05, (now - (lastFrame || now)) / 1000);
+  lastFrame = now;
+  const h = section.offsetHeight;
+  const w = section.clientWidth;
+  rainOpacity += (rainTarget - rainOpacity) * Math.min(1, dt * 2.5);
+  if (Math.abs(rainTarget - rainOpacity) < 0.01) rainOpacity = rainTarget;
+  rain.style.opacity = rainOpacity;
+  for (const d of drops) {
+    d.y += d.speed * dt;
+    d.rot += d.spin * dt;
+    if (d.y > h + d.size) {
+      d.y = -d.size * 1.2;
+      d.x = rnd(0, Math.max(1, w - d.size));
+    }
+    d.el.style.transform = `translate(${d.x}px, ${d.y}px) rotate(${d.rot}deg)`;
+  }
+  if (rainTarget === 0 && rainOpacity === 0) { rainRaf = 0; lastFrame = 0; return; }
+  rainRaf = requestAnimationFrame(rainFrame);
+}
+
+function setRain(on) {
+  rainTarget = on ? 1 : 0;
+  if (on && !rainRaf) { lastFrame = 0; rainRaf = requestAnimationFrame(rainFrame); }
+}
+
 buildRain();
 addEventListener('resize', buildRain);
 
@@ -106,7 +146,7 @@ for (const type of GESTURES) addEventListener(type, onGesture, { passive: true }
 new IntersectionObserver((entries) => {
   for (const entry of entries) {
     inSection = entry.isIntersecting;
-    rain.classList.toggle('on', inSection);
+    setRain(inSection);
     if (inSection) playCelebration();
     else if (isPlaying()) fadeOutAndPause();
   }
