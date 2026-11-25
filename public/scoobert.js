@@ -12,6 +12,35 @@ let inSection = false;
 let waitingForGesture = false;
 let primed = false;
 
+// ---- Image rain (skull + santa discord) while inside the section ----
+const RAIN_IMAGES = ['/rain-skull.png', '/rain-discord.png'];
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const rain = document.createElement('div');
+rain.className = 'celebration-rain';
+rain.setAttribute('aria-hidden', 'true');
+section.prepend(rain);
+
+function buildRain() {
+  rain.replaceChildren();
+  rain.style.setProperty('--rain-h', section.offsetHeight + 'px');
+  const count = reduceMotion ? 6 : 26;
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  for (let i = 0; i < count; i++) {
+    const img = document.createElement('img');
+    img.src = RAIN_IMAGES[i % RAIN_IMAGES.length];
+    img.alt = '';
+    img.draggable = false;
+    img.style.left = rnd(0, 94) + '%';
+    img.style.width = rnd(38, 96) + 'px';
+    img.style.animationDuration = rnd(5, 10) + 's';
+    img.style.animationDelay = -rnd(0, 10) + 's';
+    img.style.setProperty('--rain-spin', rnd(-540, 540) + 'deg');
+    rain.append(img);
+  }
+}
+buildRain();
+addEventListener('resize', buildRain);
+
 const GESTURES = ['pointerdown', 'mousedown', 'touchstart', 'touchend', 'click', 'keydown'];
 
 const FADE_MS = 1200;
@@ -77,6 +106,7 @@ for (const type of GESTURES) addEventListener(type, onGesture, { passive: true }
 new IntersectionObserver((entries) => {
   for (const entry of entries) {
     inSection = entry.isIntersecting;
+    rain.classList.toggle('on', inSection);
     if (inSection) playCelebration();
     else if (isPlaying()) fadeOutAndPause();
   }

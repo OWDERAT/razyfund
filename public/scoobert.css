@@ -187,3 +187,31 @@
   .celebration-confetti,
   .celebration-content {animation: none;}
   
+/* Image rain while inside the celebration section */
+.celebration-rain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+.celebration-rain.on {opacity: 1;}
+.celebration-rain img {
+  position: absolute;
+  top: 0;
+  height: auto;
+  border-radius: 10px;
+  user-select: none;
+  will-change: transform;
+  transform: translateY(-30vh);
+  animation: celebration-rain-fall linear infinite;
+}
+@keyframes celebration-rain-fall {
+  from {transform: translateY(-30vh) rotate(0deg);}
+  to {transform: translateY(calc(var(--rain-h, 100vh) + 30vh)) rotate(var(--rain-spin, 360deg));}
+}
+@media(prefers-reduced-motion:reduce) {
+  .celebration-rain img {animation-duration: 18s !important;}
+}
